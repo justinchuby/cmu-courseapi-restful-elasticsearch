@@ -618,7 +618,7 @@ def getCourseByID(courseid, index=None):
         if response.get("status") is not None:
             return output
         if "hits" in response and response['hits']['hits'] != []:
-            output['course'] = response['hits']['hits'][0]['_source']
+            output['course'] = Course(response['hits']['hits'][0]['_source'])
     return output
 
 

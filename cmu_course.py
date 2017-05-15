@@ -1,9 +1,8 @@
 # @file cmu_course.py
-# @brief The module for Course object and CourseList object.
+# @brief The module for Course and Meeting object.
 # @author Justin Chu (justinchuby@cmu.edu)
 
 
-import datetime
 import copy
 from utils import *
 
@@ -92,38 +91,3 @@ class TimeObj(object):
 
     def isHappeningOn(self, day):
         return (day in self.days)
-
-
-def getCurrentSemester(course_dict=None):
-    try:
-        return course_dict["lectures"][0].semester
-    except:
-        pass
-    try:
-        return course_dict["sections"][0].semester
-    except:
-        def getSemester(year, month):
-            if 1 <= month <= 4:
-                semester = "Spring"
-            elif 5 <= month <= 6:
-                semester = "Summer-1"
-            elif month == 7:
-                semester = "Summer-2"
-            else:
-                semester = "Fall"
-            return "%s %s" % (semester, str(year))
-        currentYear = datetime.date.today().year
-        currentMonth = datetime.date.today().month
-        return getSemester(currentYear, currentMonth)
-
-
-def getCatalogDate(course_dict):
-    try:
-        return course_dict["lectures"][0].rundate
-    except:
-        pass
-    try:
-        return course_dict["sections"][0].rundate
-    except:
-        pass
-    return ""
