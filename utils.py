@@ -28,22 +28,6 @@ class Listdict(dict):
             else:
                 self[key] = value
 
-##
-## @brief      Represent a time in minutes.
-##
-## @param      time  Can be (datetime.time), (datetime.datetime) or (datetime.timedelta).
-##
-## @return     (int) minutes, or and Empty object if failed to convert.
-##
-def inMinutes(time):
-    # represent a time in minutes
-    if isinstance(time, datetime.time) or isinstance(time, datetime.datetime):
-        return time.hour * 60 + time.minute
-    elif isinstance(time, datetime.timedelta):
-        return time.seconds // 60
-    else:
-        raise Exception('Failed to convert time into minutes: {}'.format(time))
-
 
 ##
 ## @brief      Eliminates spaces and makes each word in lower case.
@@ -71,55 +55,6 @@ def eliminatePunc(s):
 
 def getSearchable(s):
     return splitString(eliminatePunc(s).lower(), " ")
-
-
-def getDaysText(days):
-    try:
-        result = convertDaysToTexts(days)
-        return ", ".join(result)
-    except:
-        return "TBA"
-
-
-def getDaysTextsFromTimes(times):
-    return convertDaysToTexts(getDaysFromTimes(times))
-
-
-def getDaysFromTimes(times):
-    days = set()
-    for time in times:
-        try:
-            for day in time.get("days"):
-                if type(day) == int:
-                    days.add(day % 7)
-        except:
-            pass
-    return sorted(days)
-
-
-##
-## @brief      Convert days to their text representation in a list.
-##
-## @param      days  (int)(list) The days
-##
-## @return     A list of strings.
-##
-def convertDaysToTexts(days):
-    _DAYS = {1: "Mon",
-             2: "Tue",
-             3: "Wed",
-             4: "Thu",
-             5: "Fri",
-             6: "Sat",
-             0: "Sun"}
-    result = []
-    try:
-        for day in days:
-            if day in _DAYS:
-                result.append(_DAYS[day])
-    except:
-        pass
-    return result
 
 
 ##
@@ -177,20 +112,7 @@ def containsNone(thing):
     return False
 
 
-def getTimeDifference(begin_time, end_time, current_datetime, typ):
-    # if not isinstance(currentDatetime, datetime.datetime):
-    #     currentDatetime = datetime.datetime.now()
-    currentDate = current_datetime.date()
-
-    if typ == "current":
-        diff = datetime.datetime.combine(currentDate, end_time) - current_datetime
-        return diff
-    elif typ == "future":
-        diff = datetime.datetime.combine(currentDate, begin_time) - current_datetime
-        return diff
-
-
-def parseTime(time_string):
+def parse_time(time_string):
     try:
         return datetime.datetime.strptime(time_string, "%I:%M%p").time()
     except:
@@ -260,8 +182,8 @@ def get_semester_from_date(date):
 
 class _Tests():
     @staticmethod
-    def test_parseTime():
-        assert(datetime.time(8, 15) == parseTime("8:15am"))
-        assert(datetime.time(20, 15) == parseTime("8:15PM"))
-        assert(datetime.time(8, 0) == parseTime("8:00"))
-        assert(datetime.time(20, 0) == parseTime("20:00"))
+    def test_parse_time():
+        assert(datetime.time(8, 15) == parse_time("8:15am"))
+        assert(datetime.time(20, 15) == parse_time("8:15PM"))
+        assert(datetime.time(8, 0) == parse_time("8:00"))
+        assert(datetime.time(20, 0) == parse_time("20:00"))
