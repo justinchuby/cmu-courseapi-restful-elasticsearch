@@ -7,12 +7,12 @@ from functools import wraps
 
 try:
     from . import cmu_info, cmu_prof
-    from .utilities import *
-    from .coursescotty import *
+    from .utils import *
+    from .cmu_course import *
 except:
     import cmu_info, cmu_prof
-    from utilities import *
-    from coursescotty import *
+    from utils import *
+    from cmu_course import *
 
 from elasticsearch import Elasticsearch
 import elasticsearch
@@ -36,7 +36,7 @@ class LecsecFilter():
     def filterMini(mini=0):
         assert(isinstance(mini, int))
         if mini == 0:
-            mini = getMini()
+            mini = get_mini()
 
         def filterMini_decorator(func):
             @wraps(func)
@@ -427,9 +427,9 @@ class Parser(object):
 ##                               that are going to happen.
 ##
 ## @return     A dict with two fields: "lectures", "sections", under which are
-##             lists of (coursescotty.Lecturesection) courses.
+##             lists of (cmu_course.Lecturesection) courses.
 ##
-@LecsecFilter.filterMini(getMini())
+@LecsecFilter.filterMini(get_mini())
 def getCurrentCourses(current_datetime=None, time_delta=60, index=None):
     courseDict = dict()
     if current_datetime is None:
@@ -600,7 +600,7 @@ def search(text=None, index=None):
 ## @param      index     (str) The elasticsearch index
 ##
 ## @return     A dictionary
-#              {course: <coursescotty.Course object containing the course info>,
+#              {course: <cmu_course.Course object containing the course info>,
 #               response: <response from the server>
 #              }
 #

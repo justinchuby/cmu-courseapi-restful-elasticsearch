@@ -14,8 +14,8 @@ class Course(object):
 
     def __init__(self, scotty_dict):
         self.scottyDict = copy.deepcopy(scotty_dict)
-        for key in _PROPS:
-            self.add(key, self.scottyDict.get(key))
+        for key in self._PROPS:
+            self.__dict__[key] = self.scottyDict.get(key)
         self.courseid = scotty_dict["id"]
         self.lectures = [Meeting(self, meeting) for meeting in self.scottyDict["lectures"]]
         self.sections = [Meeting(self, meeting) for meeting in self.scottyDict["sections"]]
@@ -70,7 +70,7 @@ class TimeObj(object):
     _PROPS = ["begin", "end", "days", "location", "building", "room"]
 
     def __init__(self, time_dict):
-        for key in _PROPS:
+        for key in self._PROPS:
             self.__dict__[key] = time_dict[key]
         self.begin = parse_time(self.begin)
         self.end = parse_time(self.end)

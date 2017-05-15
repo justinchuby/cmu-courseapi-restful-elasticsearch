@@ -21,8 +21,17 @@ class HelloWorld(Resource):
 
 
 class CourseDetail(Resource):
-    def get(self, courseid, index=None):
-        result = search.getCourseByID(courseid, index)
+    def get(self, courseid):
+        result = search.getCourseByID(courseid, None)
+        course = result.get('course')
+        if course is not None:
+            return {'course': course.dict()}
+        return None
+
+
+class CourseDetailByIndex(Resource):
+    def get(self, courseid, course_index):
+        result = search.getCourseByID(courseid, course_index)
         course = result.get('course')
         if course is not None:
             return {'course': course.dict()}
@@ -31,13 +40,14 @@ class CourseDetail(Resource):
         # return {
         #     'status': '404',
         #     'error': {
-        #         'message': 'Cannot find %s in %s' % (courseid, index)
+        #         'message': 'Cannot find %s in %s' % (courseid, course_index)
         #     }
         # }
 
 
 api.add_resource(HelloWorld, '/')
-api.add_resource(CourseDetail, '/<regex("\d{2}-\d{3}"):courseid>/<regex("(f|s|m1|m2)\d{2}"):course_index>')
+api.add_resource(CourseDetail, '/course/<regex("\d{2}-\d{3}"):courseid>/')
+api.add_resource(CourseDetailByIndex, '/course/<regex("\d{2}-\d{3}"):courseid>/<regex("(f|s|m1|m2)\d{2}"):course_index>/')
 
 
 if __name__ == '__main__':
