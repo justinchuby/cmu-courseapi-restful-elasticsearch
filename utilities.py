@@ -2,10 +2,7 @@ import re
 import datetime
 import string
 import copy
-try:
-    import cmu_info
-except:
-    from . import cmu_info
+import cmu_info
 
 
 def formatErrMsg(e, header=""):
@@ -13,46 +10,6 @@ def formatErrMsg(e, header=""):
         header += "_"
     errmsg = "{}ERROR-{} STR-<{}> REPR-<{}>".format(header, datetime.datetime.now().isoformat(), str(e), repr(e))
     return errmsg
-
-
-SOC_TABLE_ORDER = {
-    "number": 0,
-    "name": 1,
-    "units": 2,
-    "lecsec": 3,
-    "days": 4,
-    "beginTime": 5,
-    "endTime": 6,
-    "room": 7,
-    "location": 8,
-    "instructor": 9
-}
-
-
-##
-## @brief      Empty object
-##
-class Empty(object):
-    def __init__(self, s=" "):
-        self.string = s
-
-    def __eq__(self, other):
-        return isinstance(other, Empty) or str(self) == other
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    def __repr__(self):
-        return self.__class__.__name__ + "()"
-
-    def __str__(self):
-        return self.string
-
-    def __iter__(self):
-        return iter(str(self))
-
-    def isdigit(self):
-        return False
 
 
 ##
@@ -85,7 +42,7 @@ def inMinutes(time):
     elif isinstance(time, datetime.timedelta):
         return time.seconds // 60
     else:
-        return Empty()
+        raise Exception('Failed to convert time into minutes: {}'.format(time))
 
 
 ##
@@ -249,7 +206,7 @@ def parseTime(time_string):
 ##
 ## @return     (int) The current mini if no date is provided.
 ##
-def getMini(current_date=None):
+def get_mini(current_date=None):
     if current_date is None:
         current_date = datetime.date.today()
     elif isinstance(current_date, datetime.datetime):
@@ -270,12 +227,12 @@ def getMini(current_date=None):
     return 0
 
 
-def getCurrentIndex():
-    return getIndexFromDate(datetime.date.today())
+def get_current_index():
+    return get_index_from_date(datetime.date.today())
 
 
-def getIndexFromDate(date):
-    mini = getMini(date)
+def get_index_from_date(date):
+    mini = get_mini(date)
     if 1 <= mini <= 2:
         semester = "f"
     elif 3 <= mini <= 4:
@@ -286,6 +243,19 @@ def getIndexFromDate(date):
         semester = "m2"
     index = semester + str(date.year)[2:]
     return index
+
+
+def get_semester_from_date(date):
+    mini = get_mini(date)
+    if 1 <= mini <= 2:
+        semester = "Fall"
+    elif 3 <= mini <= 4:
+        semester = "Spring"
+    elif mini == 5:
+        semester = "Summer-1"
+    else:
+        semester = "Summer-2"
+    return semester + str(date.year)
 
 
 class _Tests():
