@@ -12,7 +12,7 @@ try:
 except:
     import cmu_info, cmu_prof
     from utils import *
-    from cmu_course import *
+    from cmu_course import Course
 
 from elasticsearch import Elasticsearch
 import elasticsearch
@@ -570,14 +570,6 @@ def getCurrentCourses(current_datetime=None, time_delta=60, index=None):
     if "hits" in response:
         courseDict = parseResponse(response)
     return courseDict
-
-
-def presearch(search_text):
-    result = dict()
-    match = re.search("15112|15-112|kosbie|koz", search_text)
-    if match:
-        result["mainpage_toast"] = random.choice(cmu_info.ONETWELVE)
-    return result
 
 
 def search(text=None, index=None):

@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_restful import Resource, Api
 from werkzeug.routing import BaseConverter
+from config import *
 import search
 
 app = Flask(__name__)
@@ -46,8 +47,8 @@ class CourseDetailByIndex(Resource):
 
 
 api.add_resource(HelloWorld, '/')
-api.add_resource(CourseDetail, '/course/<regex("\d{2}-\d{3}"):courseid>/')
-api.add_resource(CourseDetailByIndex, '/course/<regex("\d{2}-\d{3}"):courseid>/<regex("(f|s|m1|m2)\d{2}"):course_index>/')
+api.add_resource(CourseDetail, BASE_URL + '/course/<regex("\d{2}-\d{3}"):courseid>/')
+api.add_resource(CourseDetailByIndex, BASE_URL + '/course/<regex("\d{2}-\d{3}"):courseid>/<regex("(f|s|m1|m2)\d{2}"):course_index>/')
 
 
 if __name__ == '__main__':
