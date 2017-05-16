@@ -70,29 +70,19 @@ class Searcher(object):
     ## @param      self
     ## @param      s           The query text
     ##
-    def __init__(self, s=""):
-        s = s.strip()
-        if len(s) > 140:
-            self.text = s[:140]
-        else:
-            self.text = s
-
-        self.rawQuery = dict()
-        parser = Parser(s)
-        self.searchable = parser.searchable
-        self.length = parser.length
-        self.rawQuery = parser.rawQuery
+    def __init__(self, raw_query):
+        self.raw_query = copy.deepcopy(raw_query)
 
     def __repr__(self):
-        return "<Searcher Object: text={}, rawQuery={}>".format(repr(self.text), repr(self.rawQuery))
+        return "<Searcher Object: rawQuery={}>".format(repr(self.raw_query))
 
     ##
     ## @brief      Generate the query for the database.
     ##
     ## @return     (dict) The query for querying the database.
     ##
-    def generateQuery(self):
-        return self.constructESQueryFromRaw(self.rawQuery)
+    def generate_query(self):
+        return self.constructESQueryFromRaw(self.raw_query)
 
     @staticmethod
     def constructESQueryFromRaw(raw_query):
@@ -235,6 +225,18 @@ class Searcher(object):
                  ["nested"]["query"]["bool"]["should"].append(
                     {"match": {"sections.instructors": raw_query["instructor"][0]}})
 
+        if "instructor_exact" in raw_query: # must
+            for i in range(0, 2):
+                query["query"]["bool"]["filter"]["or"][i]\
+                     ["nested"]["query"]["bool"]["must"] = []
+
+            query["query"]["bool"]["filter"]["or"][0]\
+                 ["nested"]["query"]["bool"]["must"].append(
+                    {"match": {"lectures.instructors": raw_query["instructor_exact"][0]}})
+            query["query"]["bool"]["filter"]["or"][1]\
+                 ["nested"]["query"]["bool"]["must"].append(
+                    {"match": {"sections.instructors": raw_query["instructor_exact"][0]}})
+
         query = cleanUp(query)
 
         return query
@@ -242,17 +244,18 @@ class Searcher(object):
 
 class Parser(object):
     def __init__(self, text):
+        text = text.strip()
         if len(text) > 140:
             self.text = text[:140]
         else:
             self.text = text
-        self.rawQuery = Listdict()
+        self.raw_query = Listdict()
         self.searchable = splitString(self.text.lower(), " ")
         self.length = len(self.searchable)
         self.parse()
 
     def __repr__(self):
-        return "<Parser Object: text={}, rawQuery={}>".format(repr(self.text), repr(self.rawQuery))
+        return "<Parser Object: text={}, rawQuery={}>".format(repr(self.text), repr(self.raw_query))
 
 
     ##
@@ -355,14 +358,14 @@ class Parser(object):
     ## @brief      Gets rid of the empty queries in the rawQuery.
     ##
     def cleanUpRawQuery(self):
-        keys = list(self.rawQuery.keys())
+        keys = list(self.raw_query.keys())
         for key in keys:
-            value = self.rawQuery[key]
+            value = self.raw_query[key]
             if type(value) == list:
-                self.rawQuery[key] = [elem for elem in value if elem != ""]
-                value = self.rawQuery[key]
+                self.raw_query[key] = [elem for elem in value if elem != ""]
+                value = self.raw_query[key]
             if containsNone(value) or value == [] or value == "":
-                del self.rawQuery[key]
+                del self.raw_query[key]
 
     ##
     ## @brief      Uses the searchable to generate field of search for constructing a query.
@@ -382,39 +385,39 @@ class Parser(object):
             # or a building and room combined
 
             # course id
-            try: self.rawQuery["courseid"] = self.getField(s, "courseid")["courseid"]
+            try: self.raw_query["courseid"] = self.getField(s, "courseid")["courseid"]
             except TypeError: pass
 
             # building and room combined
             _building_room = self.getField(s, "building_room")
             if _building_room:
-                self.rawQuery.concat(_building_room)
+                self.raw_query.concat(_building_room)
 
             if s.isalpha():
                 # might be a day
-                try: self.rawQuery["day"] = self.getField(s, "day")["day"]
+                try: self.raw_query["day"] = self.getField(s, "day")["day"]
                 except TypeError: pass
                 # might be a building name
-                try: self.rawQuery["building"] = self.getField(s, "building")["building"]
+                try: self.raw_query["building"] = self.getField(s, "building")["building"]
                 except TypeError: pass
                 # might be an instructor's name
-                try: self.rawQuery["instructor"] = self.getField(s, "instructor")["instructor"]
+                try: self.raw_query["instructor"] = self.getField(s, "instructor")["instructor"]
                 except TypeError: pass
 
             self.cleanUpRawQuery()
-            if self.rawQuery == dict():
-                self.rawQuery["rest"] = [s]
+            if self.raw_query == dict():
+                self.raw_query["rest"] = [s]
 
         else:
             _building_room = self.getFieldFromList(searchable, "building_room")
             if _building_room:
-                self.rawQuery.concat(_building_room)
+                self.raw_query.concat(_building_room)
             else:
-                self.rawQuery["building"] = self.getFieldFromList(searchable, "building").get("building")
-                self.rawQuery["room"] = self.getFieldFromList(searchable, "room").get("room")
-            self.rawQuery["courseid"] = self.getFieldFromList(searchable, "courseid").get("courseid")
-            self.rawQuery["day"] = self.getFieldFromList(searchable, "day").get("day")
-            self.rawQuery["rest"] = [" ".join(searchable)]
+                self.raw_query["building"] = self.getFieldFromList(searchable, "building").get("building")
+                self.raw_query["room"] = self.getFieldFromList(searchable, "room").get("room")
+            self.raw_query["courseid"] = self.getFieldFromList(searchable, "courseid").get("courseid")
+            self.raw_query["day"] = self.getFieldFromList(searchable, "day").get("day")
+            self.raw_query["rest"] = [" ".join(searchable)]
 
         self.cleanUpRawQuery()
 
@@ -572,45 +575,17 @@ def getCurrentCourses(current_datetime=None, time_delta=60, index=None):
     return courseDict
 
 
-def search(text=None, index=None):
-    if text is not None:
-        searcher = Searcher(text)
-        query = searcher.generateQuery()
-        response = queryCourse(query, index=index)
-        rawQuery = searcher.rawQuery
+# def search(text=None, index=None):
+#     if text is not None:
+#         searcher = Searcher(text)
+#         query = searcher.generate_query()
+#         response = queryCourse(query, index=index)
+#         rawQuery = searcher.rawQuery
 
-        if "hits" in response:
-            result = parseResponse(response)
-            result["raw_query"] = rawQuery
-            return result
-
-
-##
-## @brief      Get the course by courseid.
-##
-## @param      courseid  (str) The courseid
-## @param      index     (str) The elasticsearch index
-##
-## @return     A dictionary
-#              {course: <cmu_course.Course object containing the course info>,
-#               response: <response from the server>
-#              }
-#
-def getCourseByID(courseid, index=None):
-    output = {'response': {},
-              'course': None}
-    if index is None:
-        index = ALL_COURSES_INDEX
-    if re.search("^\d\d-\d\d\d$", courseid):
-        searcher = Searcher(courseid)
-        query = searcher.generateQuery()
-        response = queryCourse(query, index=index)
-        output['response'] = response
-        if response.get("status") is not None:
-            return output
-        if "hits" in response and response['hits']['hits'] != []:
-            output['course'] = Course(response['hits']['hits'][0]['_source'])
-    return output
+#         if "hits" in response:
+#             result = parseResponse(response)
+#             result["raw_query"] = rawQuery
+#             return result
 
 
 def queryCourse(query, index=None):
@@ -644,6 +619,63 @@ def fetch(index, query, servers, size=200):
     #     pass
 
     return response
+
+
+##
+## @brief      Get the course by courseid.
+##
+## @param      courseid  (str) The courseid
+## @param      index     (str) The elasticsearch index
+##
+## @return     A dictionary
+#              {course: <dictionary containing the course info>,
+#               response: <response from the server>
+#              }
+#
+def get_course_by_id(courseid, index=None):
+    output = {'response': {},
+              'course': None}
+    if index is None:
+        index = ALL_COURSES_INDEX
+    if re.search("^\d\d-\d\d\d$", courseid):
+        searcher = Searcher({'courseid': [courseid]})
+        query = searcher.generate_query()
+        response = queryCourse(query, index=index)
+        output['response'] = response
+        if response.get("status") is not None:
+            return output
+        if "hits" in response and response['hits']['hits'] != []:
+            output['course'] = response['hits']['hits'][0]['_source']
+
+    return output
+
+
+#
+#
+# @brief      Get the course by instructor name.
+#
+# @param      courseid  (str) The courseid
+# @param      index     (str) The elasticsearch index
+#
+# @return     A dictionary {course: <dictionary containing the course info>,
+#             response: <response from the server> }
+#
+def get_course_by_instructor(name, index=None):
+    output = {'response': {},
+              'course': None}
+    if index is None:
+        index = ALL_COURSES_INDEX
+    searcher = Searcher({'instructor_exact': [name]})
+    query = searcher.generate_query()
+    response = queryCourse(query, index=index)
+    output['response'] = response
+    if response.get("status") is not None:
+        return output
+    print(response)
+    assert(False)
+    if "hits" in response and response['hits']['hits'] != []:
+        output['course'] = response['hits']['hits'][0]['_source']
+    return output
 
 
 @LecsecFilter.filterPittsburgh

@@ -21,33 +21,48 @@ class HelloWorld(Resource):
         return {courseid: index}
 
 
+##
+## @brief      Gets the course detail.
+##
+## @param      courseid  The courseid
+## @param      index     The Elasticsearch index
+##
+## @return     (dict, int) A course-api Course object or the error message, 
+##             along with the http response code.
+##
 def get_course_detail(courseid, index):
-    result = search.getCourseByID(courseid, index)
+    result = search.get_course_by_id(courseid, index)
     course = result.get('course')
 
     if course is not None:
-        return {'course': course.dict()}
+        response = {'course': course}
+        code = 200
     elif 'error' not in result['response']:
         # The course does not exist in the given index
-        return {
+        response = {
             'status': '404',
             'error': {
                 'message': 'Cannot find %s in %s' % (courseid, index)
             }
-        }, 404
-    elif (result['response'].get('status') == 404):
-        return {
-            'status': '404',
-            'error': {
-                'message': 'Cannot find %s in %s' % (courseid, index)
-            }
-        }, 404
-    return {
-        'status': 500,
-        'error': {
-            'message': 'Server Error'
         }
-    }, 500
+        code = 404
+    elif (result['response'].get('status') == 404):
+        response = {
+            'status': '404',
+            'error': {
+                'message': 'Cannot find %s in %s' % (courseid, index)
+            }
+        }
+        code = 404
+    else:
+        response = {
+            'status': 500,
+            'error': {
+                'message': 'Server Error'
+            }
+        }
+        code = 500
+    return response, code
 
 
 class CourseDetail(Resource):
@@ -60,9 +75,20 @@ class CourseDetailByIndex(Resource):
         return get_course_detail(courseid, course_index)
 
 
+class Instructor(Resource):
+    def get(self, name):
+        result = search.get_course_by_instructor(name)
+        response = result['course']
+        return response
+
+
 api.add_resource(HelloWorld, '/')
+# /course/:course-id
 api.add_resource(CourseDetail, BASE_URL + '/course/<regex("\d{2}-\d{3}"):courseid>/')
 api.add_resource(CourseDetailByIndex, BASE_URL + '/course/<regex("\d{2}-\d{3}"):courseid>/<regex("(f|s|m1|m2)\d{2}"):course_index>/')
+# /instructor/:name
+api.add_resource(Instructor, BASE_URL + '/instructor/<name>/')
+
 
 
 if __name__ == '__main__':
