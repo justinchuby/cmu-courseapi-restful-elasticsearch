@@ -31,12 +31,21 @@ class CourseDetail(Resource):
 
 
 class CourseDetailByIndex(Resource):
-    def get(self, courseid, course_index):
+    def get(self, courseid, course_index=None):
         result = search.getCourseByID(courseid, course_index)
         course = result.get('course')
+
         if course is not None:
             return {'course': course.dict()}
-        elif result['response'].get('status') == '404':
+        elif 'error' not in result['response']:
+            # The course does not exist in the given index
+            return {
+                'status': '404',
+                'error': {
+                    'message': 'Cannot find %s in %s' % (courseid, course_index)
+                }
+            }, 404
+        elif (result['response'].get('status') == 404):
             return {
                 'status': '404',
                 'error': {
@@ -44,16 +53,17 @@ class CourseDetailByIndex(Resource):
                 }
             }, 404
         return {
-            'status': '500',
+            'status': 500,
             'error': {
                 'message': 'Server Error'
             }
         }, 500
 
 
+# TODO: fix regex pattern for CourseDetail and CourseDetailByIndex
 api.add_resource(HelloWorld, '/')
-api.add_resource(CourseDetail, BASE_URL + '/course/<regex("\d{2}-\d{3}"):courseid>/')
-api.add_resource(CourseDetailByIndex, BASE_URL + '/course/<regex("\d{2}-\d{3}"):courseid>/<regex("(f|s|m1|m2)\d{2}"):course_index>/')
+api.add_resource(CourseDetail, BASE_URL + '/course/<regex("\d{2}-\d{3}"):courseid>')
+api.add_resource(CourseDetailByIndex, BASE_URL + '/course/<regex("\d{2}-\d{3}"):courseid>/<regex("[(f|s|m1|m2)\d{2}/]?"):course_index>')
 
 
 if __name__ == '__main__':

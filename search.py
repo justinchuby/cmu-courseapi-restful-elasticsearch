@@ -605,7 +605,6 @@ def getCourseByID(courseid, index=None):
         searcher = Searcher(courseid)
         query = searcher.generateQuery()
         response = queryCourse(query, index=index)
-
         output['response'] = response
         if response.get("status") is not None:
             return output
