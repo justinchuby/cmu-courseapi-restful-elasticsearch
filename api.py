@@ -36,14 +36,19 @@ class CourseDetailByIndex(Resource):
         course = result.get('course')
         if course is not None:
             return {'course': course.dict()}
-        return None
-        # TODO: different response code
-        # return {
-        #     'status': '404',
-        #     'error': {
-        #         'message': 'Cannot find %s in %s' % (courseid, course_index)
-        #     }
-        # }
+        elif result['response'].get('status') == '404':
+            return {
+                'status': '404',
+                'error': {
+                    'message': 'Cannot find %s in %s' % (courseid, course_index)
+                }
+            }, 404
+        return {
+            'status': '500',
+            'error': {
+                'message': 'Server Error'
+            }
+        }, 500
 
 
 api.add_resource(HelloWorld, '/')
