@@ -71,8 +71,8 @@ class CourseDetail(Resource):
 
 
 class CourseDetailByIndex(Resource):
-    def get(self, courseid, course_index):
-        return get_course_detail(courseid, course_index)
+    def get(self, courseid, term):
+        return get_course_detail(courseid, term)
 
 
 class Instructor(Resource):
@@ -85,7 +85,7 @@ class Instructor(Resource):
 api.add_resource(HelloWorld, '/')
 # /course/:course-id
 api.add_resource(CourseDetail, BASE_URL + '/course/<regex("\d{2}-\d{3}"):courseid>/')
-api.add_resource(CourseDetailByIndex, BASE_URL + '/course/<regex("\d{2}-\d{3}"):courseid>/<regex("(f|s|m1|m2)\d{2}"):course_index>/')
+api.add_resource(CourseDetailByIndex, BASE_URL + '/course/<regex("\d{2}-\d{3}"):courseid>/term/<regex("(f|s|m1|m2)\d{2}"):term>/')
 # /instructor/:name
 api.add_resource(Instructor, BASE_URL + '/instructor/<name>/')
 
