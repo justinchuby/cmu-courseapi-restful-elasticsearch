@@ -14,7 +14,7 @@ Currently the codebase is messy and nothing is working except the course detail 
 ## Development Requirements
 
 ```
-Python>3.5
+Python>=3.5
 flask
 flask-restful
 elasticsearch  # use version 2.x for now, will move to 5.x
