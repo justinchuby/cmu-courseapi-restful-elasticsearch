@@ -1,63 +1,18 @@
 import datetime
 import re
 import copy
-import random
 import json
-from functools import wraps
 
-try:
-    from . import cmu_info, cmu_prof
-    from .utils import *
-    from .cmu_course import *
-except:
-    import cmu_info, cmu_prof
-    from utils import *
-    from cmu_course import Course
+import cmu_info, cmu_prof
+from utils import *
+from cmu_course import Course
 
-from elasticsearch import Elasticsearch
 import elasticsearch
-
+from elasticsearch_dsl import Search
+from elasticsearch_dsl.query import Q
+from elasticsearch_dsl.connections import connections
 
 ALL_COURSES_INDEX = "all_courses"
-
-
-class LecsecFilter():
-    def filterPittsburgh(func):
-        def f(*args, **kwargs):
-            def filterFunc(event):
-                return event.times[0].get("location") == "Pittsburgh, Pennsylvania"
-            d = func(*args, **kwargs)
-            newDict = dict()
-            for key, L in d.items():
-                newDict[key] = list(filter(filterFunc, L))
-            return newDict
-        return f
-
-    def filterMini(mini=0):
-        assert(isinstance(mini, int))
-        if mini == 0:
-            mini = get_mini()
-
-        def filterMini_decorator(func):
-            @wraps(func)
-            def f(*args, **kwargs):
-                d = func(*args, **kwargs)
-                newDict = dict()
-                for key, L in d.items():
-                    newL = []
-                    for event in L:
-                        _sem = 0
-                        match = re.search("(\d|[a-zA-Z])(\d)", event.lecsec)
-                        if match:
-                            # mini lecture or section
-                            _sem = int(match.group(2))
-                        if _sem == 0 or _sem == mini:
-                            newL.append(event)
-                    newDict[key] = newL
-                return newDict
-            return f
-        return filterMini_decorator
-
 
 ##
 ## @brief      The Searcher object that parses input and generates queries.
@@ -86,158 +41,63 @@ class Searcher(object):
 
     @staticmethod
     def constructESQueryFromRaw(raw_query):
+        if 'rest' in raw_query:
+            pass
+            # query["query"]["bool"]["must"] = {"query_string": {
+            #                                     "query": raw_query["rest"][0]}}
+            # query["query"]["bool"]["should"] = [
+            #                                     {"match": {"id": raw_query["rest"][0]}},
+            #                                     {"match": {"name": raw_query["rest"][0]}}
+            #                                     ]
+        elif 'courseid' in raw_query:
+            query = Q('term', id=raw_query['courseid'][0])
 
-        def cleanUp(query):
-            if (query["query"]["bool"]["filter"]["or"][0]
-                    ["nested"]["query"]["bool"]["must"]
-                    ["nested"]["query"]["bool"]["must"] == []):
-                for i in range(0, 2):
-                    del query["query"]["bool"]["filter"]["or"][i]\
-                             ["nested"]["query"]["bool"]["must"]
-                if "should" not in query["query"]["bool"]["filter"]["or"][i]\
-                                        ["nested"]["query"]["bool"]:
-                    del query["query"]["bool"]["filter"]
-            return query
+        # else:
+        #     query["query"]["bool"]["must"] = {"match_all": {}}
 
-# DEBUG
-        print(raw_query)
+        # # fields: day, building, room, instructor
+        # if "day" in raw_query: # must
+        #     query["query"]["bool"]["filter"]["or"][0]\
+        #          ["nested"]["query"]["bool"]["must"]\
+        #          ["nested"]["query"]["bool"]["must"].append(
+        #             {"match": {"lectures.times.days": raw_query["day"][0]}})
+        #     query["query"]["bool"]["filter"]["or"][1]\
+        #          ["nested"]["query"]["bool"]["must"]\
+        #          ["nested"]["query"]["bool"]["must"].append(
+        #             {"match": {"sections.times.days": raw_query["day"][0]}})
 
-        QUERY_BASE = '''
-        {
-           "query": {
-              "bool": {
-                 "filter": {
-                    "or": [
-                       {
-                          "nested": {
-                             "inner_hits": {},
-                             "path": "lectures",
-                             "score_mode": "avg",
-                             "query": {
-                                "bool": {
-                                   "must":
-                                      {
-                                         "nested": {
-                                            "path": "lectures.times",
-                                            "score_mode": "avg",
-                                            "query": {
-                                               "bool": {
-                                                  "must": []
-                                               }
-                                            }
-                                         }
-                                      }
+        # if "building" in raw_query: # must
+        #     query["query"]["bool"]["filter"]["or"][0]\
+        #          ["nested"]["query"]["bool"]["must"]\
+        #          ["nested"]["query"]["bool"]["must"].append(
+        #             {"match": {"lectures.times.building": raw_query["building"][0]}})
+        #     query["query"]["bool"]["filter"]["or"][1]\
+        #          ["nested"]["query"]["bool"]["must"]\
+        #          ["nested"]["query"]["bool"]["must"].append(
+        #             {"match": {"sections.times.building": raw_query["building"][0]}})
 
-                                }
-                             }
-                          }
-                       },
-                       {
-                          "nested": {
-                             "inner_hits": {},
-                             "path": "sections",
-                             "score_mode": "avg",
-                             "query": {
-                                "bool": {
-                                   "must":
-                                      {
-                                         "nested": {
-                                            "path": "sections.times",
-                                            "score_mode": "avg",
-                                            "query": {
-                                               "bool": {
-                                                  "must": []
-                                               }
-                                            }
-                                         }
-                                      }
-
-                                }
-                             }
-                          }
-                       }
-                    ]
-                 }
-              }
-           }
-        }
-        '''
-
-        query = json.loads(QUERY_BASE)
-
-        if "rest" in raw_query:
-            query["query"]["bool"]["must"] = {"query_string": {
-                                                "query": raw_query["rest"][0]}}
-            query["query"]["bool"]["should"] = [
-                                                {"match": {"id": raw_query["rest"][0]}},
-                                                {"match": {"name": raw_query["rest"][0]}}
-                                                ]
-        elif "courseid" in raw_query:
-            # query["query"]["bool"]["must"] = {"term": {"id": raw_query["courseid"]}}
-            query["query"]["bool"]["must"] = {"match": {"id": {
-                                                "query": raw_query["courseid"][0],
-                                                "operator": "and",
-                                                "boost": 2}}}
-
-        else:
-            query["query"]["bool"]["must"] = {"match_all": {}}
-
-        # fields: day, building, room, instructor
-        if "day" in raw_query: # must
-            query["query"]["bool"]["filter"]["or"][0]\
-                 ["nested"]["query"]["bool"]["must"]\
-                 ["nested"]["query"]["bool"]["must"].append(
-                    {"match": {"lectures.times.days": raw_query["day"][0]}})
-            query["query"]["bool"]["filter"]["or"][1]\
-                 ["nested"]["query"]["bool"]["must"]\
-                 ["nested"]["query"]["bool"]["must"].append(
-                    {"match": {"sections.times.days": raw_query["day"][0]}})
-
-        if "building" in raw_query: # must
-            query["query"]["bool"]["filter"]["or"][0]\
-                 ["nested"]["query"]["bool"]["must"]\
-                 ["nested"]["query"]["bool"]["must"].append(
-                    {"match": {"lectures.times.building": raw_query["building"][0]}})
-            query["query"]["bool"]["filter"]["or"][1]\
-                 ["nested"]["query"]["bool"]["must"]\
-                 ["nested"]["query"]["bool"]["must"].append(
-                    {"match": {"sections.times.building": raw_query["building"][0]}})
-
-        if "room" in raw_query: # must
-            query["query"]["bool"]["filter"]["or"][0]\
-                 ["nested"]["query"]["bool"]["must"]\
-                 ["nested"]["query"]["bool"]["must"].append(
-                    {"match": {"lectures.times.room": raw_query["room"][0]}})
-            query["query"]["bool"]["filter"]["or"][1]\
-                 ["nested"]["query"]["bool"]["must"]\
-                 ["nested"]["query"]["bool"]["must"].append(
-                    {"match": {"sections.times.room": raw_query["room"][0]}})
+        # if "room" in raw_query: # must
+        #     query["query"]["bool"]["filter"]["or"][0]\
+        #          ["nested"]["query"]["bool"]["must"]\
+        #          ["nested"]["query"]["bool"]["must"].append(
+        #             {"match": {"lectures.times.room": raw_query["room"][0]}})
+        #     query["query"]["bool"]["filter"]["or"][1]\
+        #          ["nested"]["query"]["bool"]["must"]\
+        #          ["nested"]["query"]["bool"]["must"].append(
+        #             {"match": {"sections.times.room": raw_query["room"][0]}})
 
         if "instructor" in raw_query: # should
-            for i in range(0, 2):
-                query["query"]["bool"]["filter"]["or"][i]\
-                     ["nested"]["query"]["bool"]["should"] = []
+        #     for i in range(0, 2):
+        #         query["query"]["bool"]["filter"]["or"][i]\
+        #              ["nested"]["query"]["bool"]["should"] = []
 
-            query["query"]["bool"]["filter"]["or"][0]\
-                 ["nested"]["query"]["bool"]["should"].append(
-                    {"match": {"lectures.instructors": raw_query["instructor"][0]}})
-            query["query"]["bool"]["filter"]["or"][1]\
-                 ["nested"]["query"]["bool"]["should"].append(
-                    {"match": {"sections.instructors": raw_query["instructor"][0]}})
+        #     query["query"]["bool"]["filter"]["or"][0]\
+        #          ["nested"]["query"]["bool"]["should"].append(
+        #             {"match": {"lectures.instructors": raw_query["instructor"][0]}})
+        #     query["query"]["bool"]["filter"]["or"][1]\
+        #          ["nested"]["query"]["bool"]["should"].append(
+        #             {"match": {"sections.instructors": raw_query["instructor"][0]}})
 
-        if "instructor_exact" in raw_query: # must
-            for i in range(0, 2):
-                query["query"]["bool"]["filter"]["or"][i]\
-                     ["nested"]["query"]["bool"]["must"] = []
-
-            query["query"]["bool"]["filter"]["or"][0]\
-                 ["nested"]["query"]["bool"]["must"].append(
-                    {"match": {"lectures.instructors": raw_query["instructor_exact"][0]}})
-            query["query"]["bool"]["filter"]["or"][1]\
-                 ["nested"]["query"]["bool"]["must"].append(
-                    {"match": {"sections.instructors": raw_query["instructor_exact"][0]}})
-
-        query = cleanUp(query)
 
         return query
 
@@ -422,230 +282,72 @@ class Parser(object):
         self.cleanUpRawQuery()
 
 
-##
-## @brief      Gets current courses from the server.
-##
-## @param      current_datetime  (datetime.datetime)
-## @param      time_delta        (int) The added time in minutes to find classes
-##                               that are going to happen.
-##
-## @return     A dict with two fields: "lectures", "sections", under which are
-##             lists of (cmu_course.Lecturesection) courses.
-##
-@LecsecFilter.filterMini(get_mini())
-def getCurrentCourses(current_datetime=None, time_delta=60, index=None):
-    courseDict = dict()
-    if current_datetime is None:
-        current_datetime = datetime.datetime.now()
-    shiftedDatetime = current_datetime + datetime.timedelta(minutes=time_delta)
-    currentDay = current_datetime.isoweekday() % 7
-
-    currentTimeString = current_datetime.time().strftime("%I:%M%p")
-    shiftedTimeString = shiftedDatetime.time().strftime("%I:%M%p")
-
-    QUERY_BASE = '''
-    {
-       "query":{
-          "bool":{
-             "must":{
-                "match_all":{
-
-                }
-             },
-             "filter":{
-                "or":[
-                   {
-                      "nested":{
-                         "inner_hits":{
-
-                         },
-                         "path":"lectures",
-                         "score_mode":"avg",
-                         "query":{
-                            "bool":{
-                               "must":
-                                  {
-                                     "nested":{
-                                        "path":"lectures.times",
-                                        "score_mode":"avg",
-                                        "query":{
-                                           "bool":{
-                                              "filter":{
-                                                 "and":[
-                                                    {
-                                                       "range":{
-                                                          "lectures.times.end":{
-                                                             "gte":"%s",
-                                                             "format":"hh:mma"
-                                                          }
-                                                       }
-                                                    },
-                                                    {
-                                                       "range":{
-                                                          "lectures.times.begin":{
-                                                             "lte":"%s",
-                                                             "format":"hh:mma"
-                                                          }
-                                                       }
-                                                    }
-                                                 ]
-                                              }
-                                           }
-                                        }
-                                     }
-                                  }
-
-                            }
-                         }
-                      }
-                   },
-                   {
-                      "nested":{
-                         "inner_hits":{
-
-                         },
-                         "path":"sections",
-                         "score_mode":"avg",
-                         "query":{
-                            "bool":{
-                               "must":
-                                  {
-                                     "nested":{
-                                        "path":"sections.times",
-                                        "score_mode":"avg",
-                                        "query":{
-                                           "bool":{
-                                              "filter":{
-                                                 "and":[
-                                                    {
-                                                       "range":{
-                                                          "sections.times.end":{
-                                                             "gte":"%s",
-                                                             "format":"hh:mma"
-                                                          }
-                                                       }
-                                                    },
-                                                    {
-                                                       "range":{
-                                                          "sections.times.begin":{
-                                                             "lte":"%s",
-                                                             "format":"hh:mma"
-                                                          }
-                                                       }
-                                                    }
-                                                 ]
-                                              }
-                                           }
-                                        }
-                                     }
-                                  }
-
-                            }
-                         }
-                      }
-                   }
-                ]
-             }
-          }
-       }
-    }
-    '''
-
-    queryString = QUERY_BASE % (currentTimeString, shiftedTimeString, currentTimeString, shiftedTimeString)
-    query = json.loads(queryString)
-
-    for i in [0, 1]:
-        query["query"]["bool"]["filter"]["or"][i]\
-             ["nested"]["query"]["bool"]["must"]\
-             ["nested"]["query"]["bool"]["must"] = []
-
-    query["query"]["bool"]["filter"]["or"][0]\
-         ["nested"]["query"]["bool"]["must"]\
-         ["nested"]["query"]["bool"]["must"].append(
-            {"match": {"lectures.times.days": currentDay}})
-    query["query"]["bool"]["filter"]["or"][1]\
-         ["nested"]["query"]["bool"]["must"]\
-         ["nested"]["query"]["bool"]["must"].append(
-            {"match": {"sections.times.days": currentDay}})
-
-    response = queryCourse(query, index=index)
-
-    if "hits" in response:
-        courseDict = parseResponse(response)
-    return courseDict
+def init_es_connection():
+    connections.create_connection(hosts=['https://c3d581bfab179c1101d5b7a9e22a5f95.us-east-1.aws.found.io:9243'],
+                                  timeout=20,
+                                  use_ssl=True,
+                                  verify_certs=True,
+                                  http_auth=("elastic:u3Mk8jjADYJ4NzUmPTn15MNx"))
 
 
-# def search(text=None, index=None):
-#     if text is not None:
-#         searcher = Searcher(text)
-#         query = searcher.generate_query()
-#         response = queryCourse(query, index=index)
-#         rawQuery = searcher.rawQuery
-
-#         if "hits" in response:
-#             result = parseResponse(response)
-#             result["raw_query"] = rawQuery
-#             return result
-
-
-def queryCourse(query, index=None):
+def query_course(query, index=None):
     if index is None:
-        index = getCurrentIndex()
-    servers = ['courseapi-scotty.rhcloud.com:80']
-    response = fetch(index, query, servers)
+        index = ALL_COURSES_INDEX
+    response = fetch(index, query, size=5)
     return response
 
 
-def fetch(index, query, servers, size=200):
-    es = Elasticsearch(servers)
-    response = dict()
+def fetch(index, query, size=200):
+    s = Search(index=index).query(query)
+    s.size = size
     try:
-        response = es.search(
-            index = index,
-            body = query,
-            size = size
-        )
+        response = s.execute()
     except elasticsearch.exceptions.NotFoundError as e:
-        print(formatErrMsg(e, "ES"))
+        # print(formatErrMsg(e, "ES"))
         response = e.info
     except elasticsearch.exceptions.RequestError as e:
-        print(formatErrMsg(e, "ES"))
+        # print(formatErrMsg(e, "ES"))
         response = e.info
     except elasticsearch.exceptions.TransportError as e:
-        print(formatErrMsg(e, "ES"))
+        # print(formatErrMsg(e, "ES"))
         response = e.info
-
-    # except:
-    #     pass
 
     return response
 
+
+def has_error(response):
+    if isinstance(response, dict) and response.get('status') is not None:
+        return True
+    return False
 
 ##
 ## @brief      Get the course by courseid.
 ##
 ## @param      courseid  (str) The courseid
-## @param      index     (str) The elasticsearch index
+## @param      term     (str) The elasticsearch index
 ##
 ## @return     A dictionary
 #              {course: <dictionary containing the course info>,
 #               response: <response from the server>
 #              }
 #
-def get_course_by_id(courseid, index=None):
+def get_course_by_id(courseid, term=None):
     output = {'response': {},
               'course': None}
+    index = term
     if index is None:
         index = ALL_COURSES_INDEX
     if re.search("^\d\d-\d\d\d$", courseid):
         searcher = Searcher({'courseid': [courseid]})
         query = searcher.generate_query()
-        response = queryCourse(query, index=index)
-        output['response'] = response
-        if response.get("status") is not None:
+        response = query_course(query, index=index)
+        output['response'] = response.to_dict()
+
+        if has_error(response):
             return output
-        if "hits" in response and response['hits']['hits'] != []:
-            output['course'] = response['hits']['hits'][0]['_source']
+        if response.hits.total != 0:
+            # Got some hits
+            output['course'] = response[0].to_dict()
 
     return output
 
@@ -665,9 +367,16 @@ def get_course_by_instructor(name, index=None):
               'course': None}
     if index is None:
         index = ALL_COURSES_INDEX
-    searcher = Searcher({'instructor_exact': [name]})
-    query = searcher.generate_query()
-    response = queryCourse(query, index=index)
+
+
+# here
+
+
+
+
+
+    # query = searcher.generate_query()
+    # response = query_course(query, index=index)
     output['response'] = response
     if response.get("status") is not None:
         return output
@@ -676,39 +385,6 @@ def get_course_by_instructor(name, index=None):
     if "hits" in response and response['hits']['hits'] != []:
         output['course'] = response['hits']['hits'][0]['_source']
     return output
-
-
-@LecsecFilter.filterPittsburgh
-def parseResponse(response):
-    # The switch for filtering based on inner hits
-    shouldFilter = True
-    courseDict = {
-        "lectures": [],
-        "sections": []
-    }
-    if "hits" in response and response['hits']['hits'] != []:
-        for hit in response['hits']['hits']:
-            d = Course(hit['_source']).split()
-
-            hitLectures = None
-            hitSections = None
-
-            try: hitLectures = hit["inner_hits"]["lectures"]["hits"]["hits"]
-            except: pass
-            try: hitSections = hit["inner_hits"]["sections"]["hits"]["hits"]
-            except: pass
-
-            if shouldFilter and hitLectures is not None:
-                courseDict["lectures"] += filterWithInnerHits(d["lectures"], hitLectures)
-            else:
-                courseDict["lectures"] += d["lectures"]
-
-            if shouldFilter and hitSections is not None:
-                courseDict["sections"] += filterWithInnerHits(d["sections"], hitSections)
-            else:
-                courseDict["sections"] += d["sections"]
-
-    return courseDict
 
 
 def filterWithInnerHits(events, innerhits_hits_hits):
