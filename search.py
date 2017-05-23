@@ -81,8 +81,8 @@ class Searcher(object):
             query &= Q('bool', should=[Q('nested', query=lec_name_query, path='lectures', inner_hits={}),
                                        Q('nested', query=sec_name_query, path='sections', inner_hits={})])
 
-
-        print(query)
+        # DEBUG
+        # print(query)
         return query
 
 
@@ -94,11 +94,23 @@ def init_es_connection():
                                   http_auth=ES_HTTP_AUTH)
 
 
+def init_output():
+    output = {'response': {},
+              'courses': []}
+    return output
+
 
 def has_error(response):
     if isinstance(response, dict) and response.get('status') is not None:
         return True
     return False
+
+
+def response_to_dict(response):
+    if isinstance(response, dict):
+        return response
+    else:
+        return response.to_dict()
 
 ##
 ## @brief      Get the course by courseid.
@@ -107,27 +119,26 @@ def has_error(response):
 ## @param      term     (str) The elasticsearch index
 ##
 ## @return     A dictionary
-#              {course: <dictionary containing the course info>,
+#              {courses: [<dictionary containing the course info>],
 #               response: <response from the server>
 #              }
 #
 def get_courses_by_id(courseid, term=None):
-    output = {'response': {},
-              'courses': None}
+    output = init_output()
     index = term
     if index is None:
         index = ALL_COURSES_INDEX
+
     if re.search("^\d\d-\d\d\d$", courseid):
         searcher = Searcher({'courseid': [courseid]})
-        query = searcher.generate_query()
-        response = query_course(query, index=index)
-        output['response'] = response.to_dict()
+        response = searcher.execute()
+        output['response'] = response_to_dict(response)
 
         if has_error(response):
             return output
         if response.hits.total != 0:
             # Got some hits
-            output['courses'] = response[0].to_dict()
+            output['courses'].append(response[0].to_dict())
 
     return output
 
@@ -143,21 +154,19 @@ def get_courses_by_id(courseid, term=None):
 #             response: <response from the server> }
 #
 def get_courses_by_instructor(name, index=None):
-    output = {'response': {},
-              'courses': None}
+    output = init_output()
     if index is None:
         index = ALL_COURSES_INDEX
 
-    searcher = Searcher({'instructor': [courseid]})
-    query = searcher.generate_query()
-    response = query_course(query, index=index)
-    output['response'] = response
+    searcher = Searcher({'instructor': [name]})
+    response = searcher.execute()
+    output['response'] = response_to_dict(response)
 
     if has_error(response):
         return output
-    if response.hits.total != 0:
-        pass
-        # TODO
+
+    for hit in response:
+        output['courses'].append(hit.to_dict())
     return output
 
 
