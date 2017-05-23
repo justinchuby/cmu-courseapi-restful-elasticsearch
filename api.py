@@ -161,6 +161,12 @@ class BuildingRoomByTerm(Resource):
         return format_response(result)
 
 
+class Datetime(Resource):
+    def get(self, date_time_str):
+        result = search.get_courses_by_datetime(date_time_str)
+        return format_response(result)
+
+
 TERM_ENDPOINT = 'term/<regex("(f|s|m1|m2)\d{2}"):term>/'
 
 api.add_resource(HomeHome, '/')
@@ -181,6 +187,7 @@ api.add_resource(RoomByTerm, BASE_URL + '/room/<room>/' + TERM_ENDPOINT)
 api.add_resource(BuildingRoom, BASE_URL + '/building/<building>/room/<room>/')
 api.add_resource(BuildingRoomByTerm, BASE_URL + '/building/<building>/room/<room>/' + TERM_ENDPOINT)
 # datetime/:datetime
+api.add_resource(Datetime, BASE_URL + '/datetime/<date_time_str>/')
 
 
 if __name__ == '__main__':

@@ -86,8 +86,8 @@ class CourseSearcher(Searcher):
 
         if 'instructor' in raw_query:
             instructor = " ".join(raw_query['instructor'])
-            lec_name_query = Q('match', lectures__instructors=instructor)
-            sec_name_query = Q('match', sections__instructors=instructor)
+            lec_name_query = Q('match', lectures__instructors = instructor)
+            sec_name_query = Q('match', sections__instructors = instructor)
 
             query &= Q('bool', should=[Q('nested', query=lec_name_query, path='lectures', inner_hits={}),
                                        Q('nested', query=sec_name_query, path='sections', inner_hits={})])
@@ -113,7 +113,24 @@ class CourseSearcher(Searcher):
             date_time = raw_query['datetime'][0].to('America/New_York')
             day = date_time.isoweekday() % 7
             time = date_time.time().strftime("%I:%M%p")
-        
+
+            _times_begin = {'lte': time, 'format': 'hh:mma'}
+            _times_end = {'gt': time, 'format': 'hh:mma'}
+
+            lec_time_query = Q('bool', must=[Q('match', lectures__times__days = day),
+                                             Q('range', lectures__times__begin = _times_begin),
+                                             Q('range', lectures__times__end = _times_end)])
+            sec_time_query = Q('bool', must=[Q('match', lectures__times__days = day),
+                                             Q('range', sections__times__begin = _times_begin),
+                                             Q('range', sections__times__end = _times_end)])
+            nested_lec_query = Q('nested', path='lectures', inner_hits={},
+                                 query = Q('nested', path='lectures.times', query=lec_time_query))
+            nested_sec_query = Q('nested', path='sections', inner_hits={},
+                                 query = Q('nested', path='sections.times', query=sec_time_query))
+            
+            query &= Q('bool', should=[nested_lec_query, nested_sec_query])
+
+
         # DEBUG
         print(json.dumps(query.to_dict(), indent=2))
         return query
@@ -225,11 +242,11 @@ def get_courses_by_datetime(date_time_str):
         output['response'] = {
             'status': 400,
             'error': {
-                'message': 'Failed to parse datetime. Please check format.'
+                'message': 'Failed to parse datetime. Please check format agrees with ISO-8601.'
             }
         }
         return output
-    index = utils.get_index_from_date(date_time)
+    index = utils.get_index_from_date(date_time.datetime)
     searcher = CourseSearcher({'datetime': [date_time]}, index=index)
     response = searcher.execute()
     output = format_courses_output(response)
