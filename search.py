@@ -2,6 +2,7 @@ import re
 import copy
 import json
 import arrow
+import datetime
 import elasticsearch
 from elasticsearch_dsl import Search
 from elasticsearch_dsl.query import Q
@@ -63,10 +64,6 @@ class Searcher(object):
     ## @return     (dict) The query for querying the database.
     ##
     def generate_query(self):
-        return self.construct_query_from_raw(self.raw_query)
-
-    @staticmethod
-    def construct_query_from_raw(raw_query):
         query = Q()
         return query
 
@@ -78,19 +75,38 @@ class CourseSearcher(Searcher):
     def __init__(self, raw_query, index=None, size=_default_size):
         super().__init__(raw_query, index, size)
 
-    @staticmethod
-    def construct_query_from_raw(raw_query):
+    def generate_query(self):
+        raw_query = self.raw_query
         query = Q()
+
         if 'courseid' in raw_query:
-            query &= Q('term', id=raw_query['courseid'][0])
+            courseid = raw_query['courseid'][0]
+            if self.index is None:
+                current_semester = utils.get_semester_from_date(datetime.datetime.today())
+                id_query = Q('bool', 
+                             must = Q('term', id=courseid),
+                             should = Q('match', name=current_semester)
+                             )
+            else:
+                id_query = Q('term', id=courseid)
+
+            query &= id_query
 
         if 'instructor' in raw_query:
             instructor = " ".join(raw_query['instructor'])
             lec_name_query = Q('match', lectures__instructors = instructor)
             sec_name_query = Q('match', sections__instructors = instructor)
 
-            query &= Q('bool', should=[Q('nested', query=lec_name_query, path='lectures', inner_hits={}),
-                                       Q('nested', query=sec_name_query, path='sections', inner_hits={})])
+            query &= Q('bool', should=[Q('nested',
+                                         query=lec_name_query,
+                                         path='lectures',
+                                         inner_hits={}),
+                                       Q('nested',
+                                         query=sec_name_query,
+                                         path='sections',
+                                         inner_hits={}
+                                         )
+                                       ])
 
         # TODO: check if DH 100 would give DH 2135 and PH 100
         # see if multilevel nesting is needed
@@ -98,15 +114,29 @@ class CourseSearcher(Searcher):
             building = raw_query['building'][0]
             lec_building_query = Q('match', lectures__times__building = building)
             sec_building_query = Q('match', sections__times__building = building)
-            query &= Q('bool', should=[Q('nested', query=lec_building_query, path='lectures.times', inner_hits={}),
-                                       Q('nested', query=sec_building_query, path='sections.times', inner_hits={})])
+            query &= Q('bool', should=[Q('nested',
+                                         query=lec_building_query,
+                                         path='lectures.times',
+                                         inner_hits={}),
+                                       Q('nested',
+                                         query=sec_building_query,
+                                         path='sections.times',
+                                         inner_hits={}
+                                         )])
 
         if 'room' in raw_query:
             room = raw_query['room'][0]
             lec_room_query = Q('match', lectures__times__room = room)
             sec_room_query = Q('match', sections__times__room = room)
-            query &= Q('bool', should=[Q('nested', query=lec_room_query, path='lectures.times', inner_hits={}),
-                                       Q('nested', query=sec_room_query, path='sections.times', inner_hits={})])
+            query &= Q('bool', should=[Q('nested',
+                                         query=lec_room_query,
+                                         path='lectures.times',
+                                         inner_hits={}),
+                                       Q('nested',
+                                         query=sec_room_query,
+                                         path='sections.times',
+                                         inner_hits={}
+                                         )])
 
         if 'datetime' in raw_query:
             # raw_query['datetime'] is of type [arrow.arrow.Arrow]
@@ -123,11 +153,20 @@ class CourseSearcher(Searcher):
             sec_time_query = Q('bool', must=[Q('match', lectures__times__days = day),
                                              Q('range', sections__times__begin = _times_begin),
                                              Q('range', sections__times__end = _times_end)])
-            nested_lec_query = Q('nested', path='lectures', inner_hits={},
-                                 query = Q('nested', path='lectures.times', query=lec_time_query))
-            nested_sec_query = Q('nested', path='sections', inner_hits={},
-                                 query = Q('nested', path='sections.times', query=sec_time_query))
-            
+            nested_lec_query = Q('nested',
+                                 query=Q('nested',
+                                         query=lec_time_query,
+                                         path='lectures.times'),
+                                 path='lectures',
+                                 inner_hits={}
+                                 )
+            nested_sec_query = Q('nested',
+                                 query=Q('nested',
+                                         query=sec_time_query,
+                                         path='sections.times'),
+                                 path='sections',
+                                 inner_hits={}
+                                 )            
             query &= Q('bool', should=[nested_lec_query, nested_sec_query])
 
 
