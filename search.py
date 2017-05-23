@@ -1,14 +1,14 @@
-import datetime
 import re
 import copy
 import json
-
+import arrow
 import elasticsearch
 from elasticsearch_dsl import Search
 from elasticsearch_dsl.query import Q
 from elasticsearch_dsl.connections import connections
 from config import ES_HOSTS, ES_HTTP_AUTH
-from utils import *
+import utils
+
 
 ##
 ## @brief      The Searcher object that parses input and generates queries.
@@ -92,6 +92,8 @@ class CourseSearcher(Searcher):
             query &= Q('bool', should=[Q('nested', query=lec_name_query, path='lectures', inner_hits={}),
                                        Q('nested', query=sec_name_query, path='sections', inner_hits={})])
 
+        # TODO: check if DH 100 would give DH 2135 and PH 100
+        # see if multilevel nesting is needed
         if 'building' in raw_query:
             building = raw_query['building'][0]
             lec_building_query = Q('match', lectures__times__building = building)
@@ -106,6 +108,12 @@ class CourseSearcher(Searcher):
             query &= Q('bool', should=[Q('nested', query=lec_room_query, path='lectures.times', inner_hits={}),
                                        Q('nested', query=sec_room_query, path='sections.times', inner_hits={})])
 
+        if 'datetime' in raw_query:
+            # raw_query['datetime'] is of type [arrow.arrow.Arrow]
+            date_time = raw_query['datetime'][0].to('America/New_York')
+            day = date_time.isoweekday() % 7
+            time = date_time.time().strftime("%I:%M%p")
+        
         # DEBUG
         print(json.dumps(query.to_dict(), indent=2))
         return query
@@ -119,9 +127,21 @@ def init_es_connection():
                                   http_auth=ES_HTTP_AUTH)
 
 
-def init_output():
+def init_courses_output():
     output = {'response': {},
               'courses': []}
+    return output
+
+
+def format_courses_output(response):
+    output = init_courses_output()
+    output['response'] = response_to_dict(response)
+
+    if has_error(response):
+        return output
+    for hit in response:
+        output['courses'].append(hit.to_dict())
+
     return output
 
 
@@ -178,24 +198,14 @@ def get_course_by_id(courseid, term=None):
 #             response: <response from the server> }
 #
 def get_courses_by_instructor(name, index=None):
-    output = init_output()
-
     searcher = CourseSearcher({'instructor': [name]}, index=index)
     response = searcher.execute()
-    output['response'] = response_to_dict(response)
-
-    if has_error(response):
-        return output
-
-    for hit in response:
-        output['courses'].append(hit.to_dict())
+    output = format_courses_output(response)
     return output
 
 
 def get_courses_by_building_room(building, room, index=None):
     assert(building is not None or room is not None)
-    output = init_output()
-
     raw_query = dict()
     if building is not None:
         raw_query['building'] = [building]
@@ -203,26 +213,39 @@ def get_courses_by_building_room(building, room, index=None):
         raw_query['room'] = [room]
     searcher = CourseSearcher(raw_query, index=index)
     response = searcher.execute()
-    output['response'] = response_to_dict(response)
-
-    if has_error(response):
-        return output
-
-    for hit in response:
-        output['courses'].append(hit.to_dict())
+    output = format_courses_output(response)
     return output
 
 
-def filterWithInnerHits(events, innerhits_hits_hits):
-    names = [hit['_source']['name'] for hit in innerhits_hits_hits]
-    names = set(names)
-    # print(innerhits_hits_hits)
-    filteredEvents = []
-    for event in events:
-        # print(event.lecsec)
-        if event.lecsec in names:
-            filteredEvents.append(event)
-    return filteredEvents
+def get_courses_by_datetime(date_time_str):
+    try:
+        date_time = arrow.get(date_time_str)
+    except:
+        output = init_courses_output()
+        output['response'] = {
+            'status': 400,
+            'error': {
+                'message': 'Failed to parse datetime. Please check format.'
+            }
+        }
+        return output
+    index = utils.get_index_from_date(date_time)
+    searcher = CourseSearcher({'datetime': [date_time]}, index=index)
+    response = searcher.execute()
+    output = format_courses_output(response)
+    return output
+
+
+# def filterWithInnerHits(events, innerhits_hits_hits):
+#     names = [hit['_source']['name'] for hit in innerhits_hits_hits]
+#     names = set(names)
+#     # print(innerhits_hits_hits)
+#     filteredEvents = []
+#     for event in events:
+#         # print(event.lecsec)
+#         if event.lecsec in names:
+#             filteredEvents.append(event)
+#     return filteredEvents
 
 
 if __name__ == '__main__':

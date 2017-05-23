@@ -35,12 +35,18 @@ def format_response(search_result):
         response = search_result
     elif res.get('status') == 404:
         response = {
-            'status': '404',
+            'status': 404,
             'error': {
                 'message': 'Not Found Error'
             }
         }
         code = 404
+    elif res.get('status') == 400:
+        response = {
+            'status': 400,
+            'error': res.get('error')
+        }
+        code = 400
     else:
         response = {
             'status': 500,
@@ -157,7 +163,6 @@ class BuildingRoomByTerm(Resource):
 
 TERM_ENDPOINT = 'term/<regex("(f|s|m1|m2)\d{2}"):term>/'
 
-
 api.add_resource(HomeHome, '/')
 api.add_resource(CourseapiHome, BASE_URL + '/')
 # /course/:course-id
@@ -175,6 +180,7 @@ api.add_resource(RoomByTerm, BASE_URL + '/room/<room>/' + TERM_ENDPOINT)
 # building/:building/room/:room
 api.add_resource(BuildingRoom, BASE_URL + '/building/<building>/room/<room>/')
 api.add_resource(BuildingRoomByTerm, BASE_URL + '/building/<building>/room/<room>/' + TERM_ENDPOINT)
+# datetime/:datetime
 
 
 if __name__ == '__main__':
