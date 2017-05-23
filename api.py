@@ -16,9 +16,14 @@ class RegexConverter(BaseConverter):
 app.url_map.converters['regex'] = RegexConverter
 
 
-class HelloWorld(Resource):
-    def get(self, courseid=None, index=None):
-        return {courseid: index}
+class HomeHome(Resource):
+    def get(self):
+        return {'message': 'Hoooray! You are connected.'}
+
+
+class CourseapiHome(Resource):
+    def get(self):
+        return {'message': 'Course API by ScottyLabs!'}
 
 
 def format_response(search_result):
@@ -152,7 +157,9 @@ class BuildingRoomByTerm(Resource):
 
 TERM_ENDPOINT = 'term/<regex("(f|s|m1|m2)\d{2}"):term>/'
 
-api.add_resource(HelloWorld, '/')
+
+api.add_resource(HomeHome, '/')
+api.add_resource(CourseapiHome, BASE_URL + '/')
 # /course/:course-id
 api.add_resource(CourseDetail, BASE_URL + '/course/<regex("\d{2}-\d{3}"):courseid>/')
 api.add_resource(CourseDetailByTerm, BASE_URL + '/course/<regex("\d{2}-\d{3}"):courseid>/' + TERM_ENDPOINT)
