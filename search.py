@@ -226,7 +226,7 @@ def response_to_dict(response):
 #
 def get_course_by_id(courseid, term=None):
     output = {'response': {},
-              'course': {}}
+              'course': None}
     index = term
 
     if re.search("^\d\d-\d\d\d$", courseid):
