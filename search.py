@@ -1,24 +1,20 @@
 import datetime
 import re
 import copy
-import json
-
-import cmu_info, cmu_prof
-from utils import *
-from cmu_course import Course
 
 import elasticsearch
 from elasticsearch_dsl import Search
 from elasticsearch_dsl.query import Q
 from elasticsearch_dsl.connections import connections
 from config import ES_HOSTS, ES_HTTP_AUTH
-
-ALL_COURSES_INDEX = "all_courses"
+from utils import *
 
 ##
 ## @brief      The Searcher object that parses input and generates queries.
 ##
 class Searcher(object):
+    _doc_type = None
+    _default_size = 5
 
     ##
     ## @brief      init
@@ -26,10 +22,11 @@ class Searcher(object):
     ## @param      self
     ## @param      s           The query text
     ##
-    def __init__(self, raw_query, index=None, size=5):
+    def __init__(self, raw_query, index=None, size=_default_size):
         self.raw_query = copy.deepcopy(raw_query)
         self.index = index
         self.size = size
+        self.doc_type = self._doc_type
 
     def __repr__(self):
         return "<Searcher Object: rawQuery={}>".format(repr(self.raw_query))
@@ -37,12 +34,13 @@ class Searcher(object):
     def execute(self):
         # if index is None:
         #     index = ALL_COURSES_INDEX
-        response = self.fetch(self.generate_query(), self.index, self.size)
+        response = self.fetch(self.generate_query(), self.index,
+                              self.size, doc_type=self.doc_type)
         return response
 
     @staticmethod
-    def fetch(query, index, size=200):
-        s = Search(index=index).query(query)
+    def fetch(query, index, size=5, doc_type=None):
+        s = Search(index=index, doc_type=doc_type).query(query)
         s.size = size
         try:
             response = s.execute()
@@ -69,7 +67,19 @@ class Searcher(object):
     @staticmethod
     def construct_query_from_raw(raw_query):
         query = Q()
+        return query
 
+
+class CourseSearcher(Searcher):
+    _doc_type = 'course'
+    _default_size = 5
+
+    def __init__(self, raw_query, index=None, size=_default_size):
+        super().__init__(raw_query, index, size)
+
+    @staticmethod
+    def construct_query_from_raw(raw_query):
+        query = Q()
         if 'courseid' in raw_query:
             query &= Q('term', id=raw_query['courseid'][0])
 
@@ -81,6 +91,7 @@ class Searcher(object):
             query &= Q('bool', should=[Q('nested', query=lec_name_query, path='lectures', inner_hits={}),
                                        Q('nested', query=sec_name_query, path='sections', inner_hits={})])
 
+        
         # DEBUG
         # print(query)
         return query
@@ -126,11 +137,9 @@ def response_to_dict(response):
 def get_courses_by_id(courseid, term=None):
     output = init_output()
     index = term
-    if index is None:
-        index = ALL_COURSES_INDEX
 
     if re.search("^\d\d-\d\d\d$", courseid):
-        searcher = Searcher({'courseid': [courseid]})
+        searcher = CourseSearcher({'courseid': [courseid]}, index=index)
         response = searcher.execute()
         output['response'] = response_to_dict(response)
 
@@ -155,10 +164,8 @@ def get_courses_by_id(courseid, term=None):
 #
 def get_courses_by_instructor(name, index=None):
     output = init_output()
-    if index is None:
-        index = ALL_COURSES_INDEX
 
-    searcher = Searcher({'instructor': [name]})
+    searcher = CourseSearcher({'instructor': [name]}, index=index)
     response = searcher.execute()
     output['response'] = response_to_dict(response)
 
