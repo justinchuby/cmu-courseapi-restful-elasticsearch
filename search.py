@@ -7,8 +7,9 @@ import elasticsearch
 from elasticsearch_dsl import Search
 from elasticsearch_dsl.query import Q
 from elasticsearch_dsl.connections import connections
-from config import ES_HOSTS, ES_HTTP_AUTH, DEBUG
 import certifi
+from config import ES_HOSTS, ES_HTTP_AUTH
+import config
 import utils
 
 
@@ -182,7 +183,7 @@ class CourseSearcher(Searcher):
                                  )            
             query &= Q('bool', should=[nested_lec_query, nested_sec_query])
 
-        if DEBUG:
+        if config.DEBUG:
             print(json.dumps(query.to_dict(), indent=2))
             print("[DEBUG] max size: {}".format(self.size))
         return query
@@ -224,7 +225,7 @@ def response_to_dict(response):
     if isinstance(response, dict):
         return response
     else:
-        if DEBUG:
+        if config.DEBUG:
             print("[DEBUG] hits count: {}".format(response.hits.total))
         return response.to_dict()
 
