@@ -1,0 +1,6 @@
+Python>=3.5
+flask
+flask-restful
+elasticsearch>5
+elasticsearch-dsl>5
+arrow
