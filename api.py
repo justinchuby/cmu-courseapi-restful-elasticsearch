@@ -7,7 +7,11 @@ import search
 
 app = Flask(__name__)
 api = Api(app)
-search.init_es_connection()
+
+
+@app.before_first_request
+def startup():
+    search.init_es_connection()
 
 
 class RegexConverter(BaseConverter):
