@@ -4,6 +4,7 @@ from werkzeug.routing import BaseConverter
 from config import *
 import search
 
+
 app = Flask(__name__)
 api = Api(app)
 
