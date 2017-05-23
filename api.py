@@ -7,6 +7,7 @@ import search
 
 app = Flask(__name__)
 api = Api(app)
+search.init_es_connection()
 
 
 class RegexConverter(BaseConverter):
@@ -192,6 +193,5 @@ api.add_resource(Datetime, BASE_URL + '/datetime/<date_time_str>/')
 
 
 if __name__ == '__main__':
-    search.init_es_connection()
     app.run(debug=True)
 
