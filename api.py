@@ -121,20 +121,20 @@ class CourseDetailByTerm(Resource):
 
 class Instructor(Resource):
     def get(self, name):
-        result = search.get_course_by_instructor(name)
+        result = search.get_courses_by_instructor(name)
         return format_response(result)
 
 
 class InstructorByTerm(Resource):
     def get(self, name, term):
-        result = search.get_course_by_instructor(name, index=term)
+        result = search.get_courses_by_instructor(name, index=term)
         return format_response(result)
 
 
-class Building(Resource):
-    def get(self, building):
-        result = search.get_courses_by_building_room(building, None)
-        return format_response(result)
+# class Building(Resource):
+#     def get(self, building):
+#         result = search.get_courses_by_building_room(building, None)
+#         return format_response(result)
 
 
 class BuildingByTerm(Resource):
@@ -173,21 +173,21 @@ class Datetime(Resource):
         return format_response(result)
 
 
-TERM_ENDPOINT = 'term/<regex("(f|s|m1|m2)\d{2}"):term>/'
+TERM_ENDPOINT = r'term/<regex("(f|s|m1|m2)\d{2}|current"):term>/'
 
 api.add_resource(HomeHome, '/')
 api.add_resource(CourseapiHome, BASE_URL + '/')
 # /course/:course-id
-api.add_resource(CourseDetail, BASE_URL + '/course/<regex("\d{2}-\d{3}"):courseid>/')
-api.add_resource(CourseDetailByTerm, BASE_URL + '/course/<regex("\d{2}-\d{3}"):courseid>/' + TERM_ENDPOINT)
+api.add_resource(CourseDetail, BASE_URL + r'/course/<regex("\d{2}-\d{3}"):courseid>/')
+api.add_resource(CourseDetailByTerm, BASE_URL + r'/course/<regex("\d{2}-\d{3}"):courseid>/' + TERM_ENDPOINT)
 # /instructor/:name
 api.add_resource(Instructor, BASE_URL + '/instructor/<name>/')
 api.add_resource(InstructorByTerm, BASE_URL + '/instructor/<name>/' + TERM_ENDPOINT)
 # /building/:building
-api.add_resource(Building, BASE_URL + '/building/<building>/')
+# api.add_resource(Building, BASE_URL + '/building/<building>/')
 api.add_resource(BuildingByTerm, BASE_URL + '/building/<building>/' + TERM_ENDPOINT)
 # /room/:room
-api.add_resource(Room, BASE_URL + '/room/<room>/')
+# api.add_resource(Room, BASE_URL + '/room/<room>/')
 api.add_resource(RoomByTerm, BASE_URL + '/room/<room>/' + TERM_ENDPOINT)
 # building/:building/room/:room
 api.add_resource(BuildingRoom, BASE_URL + '/building/<building>/room/<room>/')

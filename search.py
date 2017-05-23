@@ -75,6 +75,8 @@ class CourseSearcher(Searcher):
 
     def __init__(self, raw_query, index=None, size=_default_size):
         super().__init__(raw_query, index, size)
+        if self.index == 'current':
+            self.index = utils.get_current_index()
 
     def generate_query(self):
         raw_query = self.raw_query
@@ -254,27 +256,27 @@ def get_course_by_id(courseid, term=None):
 # @return     A dictionary {courses: [<dictionary containing the course info>],
 #             response: <response from the server> }
 #
-def get_courses_by_instructor(name, index=None):
-    searcher = CourseSearcher({'instructor': [name]}, index=index)
+def get_courses_by_instructor(name, index=None, size=100):
+    searcher = CourseSearcher({'instructor': [name]}, index=index, size=size)
     response = searcher.execute()
     output = format_courses_output(response)
     return output
 
 
-def get_courses_by_building_room(building, room, index=None):
+def get_courses_by_building_room(building, room, index=None, size=100):
     assert(building is not None or room is not None)
     raw_query = dict()
     if building is not None:
         raw_query['building'] = [building]
     if room is not None:
         raw_query['room'] = [room]
-    searcher = CourseSearcher(raw_query, index=index)
+    searcher = CourseSearcher(raw_query, index=index, size=size)
     response = searcher.execute()
     output = format_courses_output(response)
     return output
 
 
-def get_courses_by_datetime(date_time_str):
+def get_courses_by_datetime(date_time_str, size=200):
     try:
         date_time = arrow.get(date_time_str)
     except:
@@ -287,7 +289,7 @@ def get_courses_by_datetime(date_time_str):
         }
         return output
     index = utils.get_index_from_date(date_time.datetime)
-    searcher = CourseSearcher({'datetime': [date_time]}, index=index)
+    searcher = CourseSearcher({'datetime': [date_time]}, index=index,  size=size)
     response = searcher.execute()
     output = format_courses_output(response)
     return output
