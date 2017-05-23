@@ -1,5 +1,5 @@
-from flask import Flask
-from flask_restful import Resource, Api
+from flask import Flask, request
+from flask_restful import Resource, Api, reqparse
 from werkzeug.routing import BaseConverter
 from config import *
 import search
@@ -24,7 +24,9 @@ app.url_map.converters['regex'] = RegexConverter
 
 class HomeHome(Resource):
     def get(self):
-        return {'message': 'Hoooray! You are connected.'}
+        args = request.args
+        return {'message': 'Hoooray! You are connected.',
+                'args': args}
 
 
 class CourseapiHome(Resource):
@@ -121,20 +123,32 @@ class CourseDetailByTerm(Resource):
 
 class Instructor(Resource):
     def get(self, name):
-        result = search.get_course_by_instructor(name)
+        args = request.args
+        fuzzy = False
+        if 'fuzzy' in args:
+            fuzzy = True
+        result = search.get_courses_by_instructor(name, fuzzy=fuzzy, size=1000)
         return format_response(result)
 
 
 class InstructorByTerm(Resource):
+    fuzzy_parser = reqparse.RequestParser()
+    fuzzy_parser.add_argument('fuzzy')
+
     def get(self, name, term):
-        result = search.get_course_by_instructor(name, index=term)
+        args = request.args
+        fuzzy = False
+        if 'fuzzy' in args:
+            fuzzy = True
+        result = search.get_courses_by_instructor(name, fuzzy=fuzzy,
+                                                  index=term, size=500)
         return format_response(result)
 
 
-class Building(Resource):
-    def get(self, building):
-        result = search.get_courses_by_building_room(building, None)
-        return format_response(result)
+# class Building(Resource):
+#     def get(self, building):
+#         result = search.get_courses_by_building_room(building, None)
+#         return format_response(result)
 
 
 class BuildingByTerm(Resource):
@@ -143,10 +157,10 @@ class BuildingByTerm(Resource):
         return format_response(result)
 
 
-class Room(Resource):
-    def get(self, room):
-        result = search.get_courses_by_building_room(None, room)
-        return format_response(result)
+# class Room(Resource):
+#     def get(self, room):
+#         result = search.get_courses_by_building_room(None, room)
+#         return format_response(result)
 
 
 class RoomByTerm(Resource):
@@ -169,25 +183,25 @@ class BuildingRoomByTerm(Resource):
 
 class Datetime(Resource):
     def get(self, date_time_str):
-        result = search.get_courses_by_datetime(date_time_str)
+        result = search.get_courses_by_datetime(date_time_str, size=500)
         return format_response(result)
 
 
-TERM_ENDPOINT = 'term/<regex("(f|s|m1|m2)\d{2}"):term>/'
+TERM_ENDPOINT = r'term/<regex("(f|s|m1|m2)\d{2}|current"):term>/'
 
 api.add_resource(HomeHome, '/')
 api.add_resource(CourseapiHome, BASE_URL + '/')
 # /course/:course-id
-api.add_resource(CourseDetail, BASE_URL + '/course/<regex("\d{2}-\d{3}"):courseid>/')
-api.add_resource(CourseDetailByTerm, BASE_URL + '/course/<regex("\d{2}-\d{3}"):courseid>/' + TERM_ENDPOINT)
+api.add_resource(CourseDetail, BASE_URL + r'/course/<regex("\d{2}-\d{3}"):courseid>/')
+api.add_resource(CourseDetailByTerm, BASE_URL + r'/course/<regex("\d{2}-\d{3}"):courseid>/' + TERM_ENDPOINT)
 # /instructor/:name
 api.add_resource(Instructor, BASE_URL + '/instructor/<name>/')
 api.add_resource(InstructorByTerm, BASE_URL + '/instructor/<name>/' + TERM_ENDPOINT)
 # /building/:building
-api.add_resource(Building, BASE_URL + '/building/<building>/')
+# api.add_resource(Building, BASE_URL + '/building/<building>/')
 api.add_resource(BuildingByTerm, BASE_URL + '/building/<building>/' + TERM_ENDPOINT)
 # /room/:room
-api.add_resource(Room, BASE_URL + '/room/<room>/')
+# api.add_resource(Room, BASE_URL + '/room/<room>/')
 api.add_resource(RoomByTerm, BASE_URL + '/room/<room>/' + TERM_ENDPOINT)
 # building/:building/room/:room
 api.add_resource(BuildingRoom, BASE_URL + '/building/<building>/room/<room>/')
