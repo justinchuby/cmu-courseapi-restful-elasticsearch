@@ -35,15 +35,15 @@ course/v1/
 	- [x]	:name: first last, last, first
 	- [x]	?fuzzy
 - [x]	/datetime/:datetime
-			# current happening classes at given time
+		# current happening classes at given time
 - [x]	/building/:building/term/:term
-			:building: DH
+		:building: DH
 - [x]	/room/:room/term/:term
-			:room: 2315
+		:room: 2315
 - [x]	/building/:building/room/:room
 - [ ]	/search
-			?q
+		?q
 
 - [x]	.../term/:term
-			:term: f17, current
+		:term: f17, current
 ```
