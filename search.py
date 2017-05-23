@@ -74,7 +74,7 @@ class Searcher(object):
             query &= Q('term', id=raw_query['courseid'][0])
 
         if "instructor" in raw_query:
-            instructor = raw_query['instructor']
+            instructor = " ".join(raw_query['instructor'])
             lec_name_query = Q('match', lectures__instructors=instructor)
             sec_name_query = Q('match', sections__instructors=instructor)
 
@@ -112,16 +112,16 @@ def response_to_dict(response):
     else:
         return response.to_dict()
 
-##
-## @brief      Get the course by courseid.
-##
-## @param      courseid  (str) The courseid
-## @param      term     (str) The elasticsearch index
-##
-## @return     A dictionary
-#              {courses: [<dictionary containing the course info>],
-#               response: <response from the server>
-#              }
+
+#
+#
+# @brief      Get the course by courseid.
+#
+# @param      courseid  (str) The courseid
+# @param      term      (str) The elasticsearch index
+#
+# @return     A dictionary {courses: [<dictionary containing the course info>],
+#             response: <response from the server> }
 #
 def get_courses_by_id(courseid, term=None):
     output = init_output()
@@ -147,7 +147,7 @@ def get_courses_by_id(courseid, term=None):
 #
 # @brief      Get the course by instructor name.
 #
-# @param      courseid  (str) The courseid
+# @param      name      (str) The instructor name
 # @param      index     (str) The elasticsearch index
 #
 # @return     A dictionary {course: <dictionary containing the course info>,
