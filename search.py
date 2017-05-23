@@ -8,6 +8,7 @@ from elasticsearch_dsl import Search
 from elasticsearch_dsl.query import Q
 from elasticsearch_dsl.connections import connections
 from config import ES_HOSTS, ES_HTTP_AUTH
+import certifi
 import utils
 
 
