@@ -211,5 +211,6 @@ api.add_resource(Datetime, BASE_URL + '/datetime/<date_time_str>/')
 
 
 if __name__ == '__main__':
+    config.DEBUG = True
     app.run(debug=True)
 
