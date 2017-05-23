@@ -1,5 +1,5 @@
-from flask import Flask
-from flask_restful import Resource, Api
+from flask import Flask, request
+from flask_restful import Resource, Api, reqparse
 from werkzeug.routing import BaseConverter
 from config import *
 import search
@@ -24,7 +24,9 @@ app.url_map.converters['regex'] = RegexConverter
 
 class HomeHome(Resource):
     def get(self):
-        return {'message': 'Hoooray! You are connected.'}
+        args = request.args
+        return {'message': 'Hoooray! You are connected.',
+                'args': args}
 
 
 class CourseapiHome(Resource):
@@ -121,13 +123,25 @@ class CourseDetailByTerm(Resource):
 
 class Instructor(Resource):
     def get(self, name):
-        result = search.get_courses_by_instructor(name)
+        args = request.args
+        fuzzy = False
+        if 'fuzzy' in args:
+            fuzzy = True
+        result = search.get_courses_by_instructor(name, fuzzy=fuzzy, size=500)
         return format_response(result)
 
 
 class InstructorByTerm(Resource):
+    fuzzy_parser = reqparse.RequestParser()
+    fuzzy_parser.add_argument('fuzzy')
+
     def get(self, name, term):
-        result = search.get_courses_by_instructor(name, index=term)
+        args = request.args
+        fuzzy = False
+        if 'fuzzy' in args:
+            fuzzy = True
+        result = search.get_courses_by_instructor(name, fuzzy=fuzzy,
+                                                  index=term, size=2000)
         return format_response(result)
 
 
@@ -143,10 +157,10 @@ class BuildingByTerm(Resource):
         return format_response(result)
 
 
-class Room(Resource):
-    def get(self, room):
-        result = search.get_courses_by_building_room(None, room)
-        return format_response(result)
+# class Room(Resource):
+#     def get(self, room):
+#         result = search.get_courses_by_building_room(None, room)
+#         return format_response(result)
 
 
 class RoomByTerm(Resource):
@@ -169,7 +183,7 @@ class BuildingRoomByTerm(Resource):
 
 class Datetime(Resource):
     def get(self, date_time_str):
-        result = search.get_courses_by_datetime(date_time_str)
+        result = search.get_courses_by_datetime(date_time_str, size=500)
         return format_response(result)
 
 

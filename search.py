@@ -32,13 +32,13 @@ class Searcher(object):
         self.doc_type = self._doc_type
 
     def __repr__(self):
-        return "<Searcher Object: rawQuery={}>".format(repr(self.raw_query))
+        return "<Searcher Object: raw_query={}>".format(repr(self.raw_query))
 
     def execute(self):
         # if index is None:
         #     index = ALL_COURSES_INDEX
         response = self.fetch(self.generate_query(), self.index,
-                              self.size, doc_type=self.doc_type)
+                              size=self.size, doc_type=self.doc_type)
         return response
 
     @staticmethod
@@ -97,8 +97,15 @@ class CourseSearcher(Searcher):
 
         if 'instructor' in raw_query:
             instructor = " ".join(raw_query['instructor'])
-            lec_name_query = Q('match', lectures__instructors = instructor)
-            sec_name_query = Q('match', sections__instructors = instructor)
+            _query_obj = {'query': instructor,
+                          'operator': 'and'}
+            if 'instructor_fuzzy' in raw_query:
+                _query_obj['fuzziness'] = 'AUTO'
+
+            lec_name_query = Q('match',
+                               lectures__instructors = _query_obj)
+            sec_name_query = Q('match',
+                               sections__instructors = _query_obj)
 
             query &= Q('bool', should=[Q('nested',
                                          query=lec_name_query,
@@ -110,6 +117,7 @@ class CourseSearcher(Searcher):
                                          inner_hits={}
                                          )
                                        ])
+
 
         # TODO: check if DH 100 would give DH 2135 and PH 100
         # see if multilevel nesting is needed
@@ -142,11 +150,13 @@ class CourseSearcher(Searcher):
                                          )])
 
         if 'datetime' in raw_query:
+            # Get day and time from the datetime object
             # raw_query['datetime'] is of type [arrow.arrow.Arrow]
             date_time = raw_query['datetime'][0].to('America/New_York')
             day = date_time.isoweekday() % 7
             time = date_time.time().strftime("%I:%M%p")
 
+            # Construct the query based on day and time
             _times_begin = {'lte': time, 'format': 'hh:mma'}
             _times_end = {'gt': time, 'format': 'hh:mma'}
 
@@ -175,6 +185,7 @@ class CourseSearcher(Searcher):
 
         # DEBUG
         print(json.dumps(query.to_dict(), indent=2))
+        print("max size: {}".format(self.size))
         return query
 
 
@@ -256,8 +267,12 @@ def get_course_by_id(courseid, term=None):
 # @return     A dictionary {courses: [<dictionary containing the course info>],
 #             response: <response from the server> }
 #
-def get_courses_by_instructor(name, index=None, size=100):
-    searcher = CourseSearcher({'instructor': [name]}, index=index, size=size)
+def get_courses_by_instructor(name, fuzzy=False, index=None, size=100):
+    raw_query = {'instructor': [name]}
+    if fuzzy:
+        raw_query['instructor_fuzzy'] = [name]
+
+    searcher = CourseSearcher(raw_query, index=index, size=size)
     response = searcher.execute()
     output = format_courses_output(response)
     return output

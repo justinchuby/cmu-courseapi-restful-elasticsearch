@@ -33,17 +33,17 @@ course/v1/
 	- [ ]		15-*22, 15-*, *-122, 18-3*, 18-32*
 - [.]	/instructor/:name
 	- [x]	:name: first last, last, first
-	- [ ]	?fuzzy
+	- [x]	?fuzzy
 - [x]	/datetime/:datetime
 			# current happening classes at given time
-- [x]	/building/:building
+- [x]	/building/:building/term/:term
 			:building: DH
-- [x]	/room/:room
+- [x]	/room/:room/term/:term
 			:room: 2315
 - [x]	/building/:building/room/:room
 - [ ]	/search
 			?q
 
-- [.]	.../term/:term
-			:term: f17
+- [x]	.../term/:term
+			:term: f17, current
 ```
