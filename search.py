@@ -1,6 +1,7 @@
 import datetime
 import re
 import copy
+import json
 
 import elasticsearch
 from elasticsearch_dsl import Search
@@ -83,7 +84,7 @@ class CourseSearcher(Searcher):
         if 'courseid' in raw_query:
             query &= Q('term', id=raw_query['courseid'][0])
 
-        if "instructor" in raw_query:
+        if 'instructor' in raw_query:
             instructor = " ".join(raw_query['instructor'])
             lec_name_query = Q('match', lectures__instructors=instructor)
             sec_name_query = Q('match', sections__instructors=instructor)
@@ -91,9 +92,22 @@ class CourseSearcher(Searcher):
             query &= Q('bool', should=[Q('nested', query=lec_name_query, path='lectures', inner_hits={}),
                                        Q('nested', query=sec_name_query, path='sections', inner_hits={})])
 
-        
+        if 'building' in raw_query:
+            building = raw_query['building'][0]
+            lec_building_query = Q('match', lectures__times__building = building)
+            sec_building_query = Q('match', sections__times__building = building)
+            query &= Q('bool', should=[Q('nested', query=lec_building_query, path='lectures.times', inner_hits={}),
+                                       Q('nested', query=sec_building_query, path='sections.times', inner_hits={})])
+
+        if 'room' in raw_query:
+            room = raw_query['room'][0]
+            lec_room_query = Q('match', lectures__times__room = room)
+            sec_room_query = Q('match', sections__times__room = room)
+            query &= Q('bool', should=[Q('nested', query=lec_room_query, path='lectures.times', inner_hits={}),
+                                       Q('nested', query=sec_room_query, path='sections.times', inner_hits={})])
+
         # DEBUG
-        # print(query)
+        print(json.dumps(query.to_dict(), indent=2))
         return query
 
 
@@ -159,13 +173,34 @@ def get_courses_by_id(courseid, term=None):
 # @param      name      (str) The instructor name
 # @param      index     (str) The elasticsearch index
 #
-# @return     A dictionary {course: <dictionary containing the course info>,
+# @return     A dictionary {courses: [<dictionary containing the course info>],
 #             response: <response from the server> }
 #
 def get_courses_by_instructor(name, index=None):
     output = init_output()
 
     searcher = CourseSearcher({'instructor': [name]}, index=index)
+    response = searcher.execute()
+    output['response'] = response_to_dict(response)
+
+    if has_error(response):
+        return output
+
+    for hit in response:
+        output['courses'].append(hit.to_dict())
+    return output
+
+
+def get_courses_by_building_room(building, room, index=None):
+    assert(building is not None or room is not None)
+    output = init_output()
+
+    raw_query = dict()
+    if building is not None:
+        raw_query['building'] = [building]
+    if room is not None:
+        raw_query['room'] = [room]
+    searcher = CourseSearcher(raw_query, index=index)
     response = searcher.execute()
     output['response'] = response_to_dict(response)
 
@@ -187,3 +222,7 @@ def filterWithInnerHits(events, innerhits_hits_hits):
         if event.lecsec in names:
             filteredEvents.append(event)
     return filteredEvents
+
+
+if __name__ == '__main__':
+    init_es_connection()
