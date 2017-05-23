@@ -177,7 +177,7 @@ def get_semester_from_date(date):
         semester = "Summer-1"
     else:
         semester = "Summer-2"
-    return semester + str(date.year)
+    return semester + ' ' + str(date.year)
 
 
 class _Tests():
