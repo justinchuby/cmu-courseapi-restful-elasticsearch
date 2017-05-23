@@ -127,7 +127,7 @@ class Instructor(Resource):
         fuzzy = False
         if 'fuzzy' in args:
             fuzzy = True
-        result = search.get_courses_by_instructor(name, fuzzy=fuzzy, size=500)
+        result = search.get_courses_by_instructor(name, fuzzy=fuzzy, size=1000)
         return format_response(result)
 
 
@@ -141,7 +141,7 @@ class InstructorByTerm(Resource):
         if 'fuzzy' in args:
             fuzzy = True
         result = search.get_courses_by_instructor(name, fuzzy=fuzzy,
-                                                  index=term, size=2000)
+                                                  index=term, size=500)
         return format_response(result)
 
 

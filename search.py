@@ -185,7 +185,7 @@ class CourseSearcher(Searcher):
 
         # DEBUG
         print(json.dumps(query.to_dict(), indent=2))
-        print("max size: {}".format(self.size))
+        print("[DEBUG] max size: {}".format(self.size))
         return query
 
 
@@ -225,6 +225,7 @@ def response_to_dict(response):
     if isinstance(response, dict):
         return response
     else:
+        print("[DEBUG] hits count: {}".format(response.hits.total))
         return response.to_dict()
 
 
