@@ -2,14 +2,6 @@
 # @brief Stores information about CMU.
 # @author Justin Chu (justinchuby@cmu.edu)
 
-
-ONETWELVE = ["I love 112 !",
-             "Carpe Diem !",
-             "Hot Diggity",
-             "\"THINK rather than kicking the code a little bit and somehow let it pass test cases.\"",
-             "\"Onward !\"",
-             "\"Live purposefully.\""]
-
 CMU_BUILDINGS = {
     "baker": "BH",
     "cyert": "CYH",
