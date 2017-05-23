@@ -1,16 +1,21 @@
 from flask import Flask, request
 from flask_restful import Resource, Api, reqparse
 from werkzeug.routing import BaseConverter
-from config import *
+import config
+from config import BASE_URL
+from config import Message
 import search
 
 
 app = Flask(__name__)
 api = Api(app)
 
-
+##
+## Startup script
+##
 @app.before_first_request
 def startup():
+    # Initialize connection to ES server
     search.init_es_connection()
 
 
@@ -22,16 +27,20 @@ class RegexConverter(BaseConverter):
 app.url_map.converters['regex'] = RegexConverter
 
 
+##
+## Classes for request handlers
+##
+
 class HomeHome(Resource):
     def get(self):
         args = request.args
-        return {'message': 'Hoooray! You are connected.',
+        return {'message': Message.HOME_MESSAGE,
                 'args': args}
 
 
 class CourseapiHome(Resource):
     def get(self):
-        return {'message': 'Course API by ScottyLabs!'}
+        return {'message': Message.API_ROOT_MESSAGE}
 
 
 def format_response(search_result):
@@ -186,6 +195,10 @@ class Datetime(Resource):
         result = search.get_courses_by_datetime(date_time_str, size=500)
         return format_response(result)
 
+
+##
+## Endpoint definitions
+##
 
 TERM_ENDPOINT = r'term/<regex("(f|s|m1|m2)\d{2}|current"):term>/'
 
