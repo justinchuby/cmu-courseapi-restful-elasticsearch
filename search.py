@@ -148,8 +148,9 @@ def response_to_dict(response):
 # @return     A dictionary {courses: [<dictionary containing the course info>],
 #             response: <response from the server> }
 #
-def get_courses_by_id(courseid, term=None):
-    output = init_output()
+def get_course_by_id(courseid, term=None):
+    output = {'response': {},
+              'course': {}}
     index = term
 
     if re.search("^\d\d-\d\d\d$", courseid):
@@ -161,7 +162,7 @@ def get_courses_by_id(courseid, term=None):
             return output
         if response.hits.total != 0:
             # Got some hits
-            output['courses'].append(response[0].to_dict())
+            output['course'] = response[0].to_dict()
 
     return output
 

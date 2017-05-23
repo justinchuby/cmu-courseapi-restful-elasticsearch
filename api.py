@@ -21,15 +21,42 @@ class HelloWorld(Resource):
         return {courseid: index}
 
 
-##
-## @brief      Gets the course detail.
-##
-## @param      courseid  The courseid
-## @param      index     The Elasticsearch index
-##
-## @return     (dict, int) A course-api Course object or the error message, 
-##             along with the http response code.
-##
+def format_response(search_result):
+    # requires search_result to be a dictionary
+    res = search_result.pop('response')
+    code = 200
+
+    if res.get('status') is None:
+        response = search_result
+    elif res.get('status') == 404:
+        response = {
+            'status': '404',
+            'error': {
+                'message': 'Not Found Error'
+            }
+        }
+        code = 404
+    else:
+        response = {
+            'status': 500,
+            'error': {
+                'message': 'Server Error'
+            }
+        }
+        code = 500
+    return response, code
+
+
+#
+#
+# @brief      Gets the course detail.
+#
+# @param      courseid  The courseid
+# @param      index     The Elasticsearch index
+#
+# @return     (dict, int) A course-api Course object or the error message,
+#             along with the http response code.
+#
 def get_course_detail(courseid, index):
     result = search.get_course_by_id(courseid, index)
     course = result.get('course')
@@ -70,7 +97,7 @@ class CourseDetail(Resource):
         return get_course_detail(courseid, None)
 
 
-class CourseDetailByIndex(Resource):
+class CourseDetailByTerm(Resource):
     def get(self, courseid, term):
         return get_course_detail(courseid, term)
 
@@ -78,18 +105,72 @@ class CourseDetailByIndex(Resource):
 class Instructor(Resource):
     def get(self, name):
         result = search.get_course_by_instructor(name)
-        response = result['course']
-        return response
+        return format_response(result)
 
+
+class InstructorByTerm(Resource):
+    def get(self, name, term):
+        result = search.get_course_by_instructor(name, index=term)
+        return format_response(result)
+
+
+class Building(Resource):
+    def get(self, building):
+        result = search.get_courses_by_building_room(building, None)
+        return format_response(result)
+
+
+class BuildingByTerm(Resource):
+    def get(self, building, term):
+        result = search.get_courses_by_building_room(building, None, index=term)
+        return format_response(result)
+
+
+class Room(Resource):
+    def get(self, room):
+        result = search.get_courses_by_building_room(None, room)
+        return format_response(result)
+
+
+class RoomByTerm(Resource):
+    def get(self, room, term):
+        result = search.get_courses_by_building_room(None, room, index=term)
+        return format_response(result)
+
+
+class BuildingRoom(Resource):
+    def get(self, building, room):
+        result = search.get_courses_by_building_room(building, room)
+        return format_response(result)
+
+
+class BuildingRoomByTerm(Resource):
+    def get(self, building, room, term):
+        result = search.get_courses_by_building_room(building, room, index=term)
+        return format_response(result)
+
+
+TERM_ENDPOINT = 'term/<regex("(f|s|m1|m2)\d{2}"):term>/'
 
 api.add_resource(HelloWorld, '/')
 # /course/:course-id
 api.add_resource(CourseDetail, BASE_URL + '/course/<regex("\d{2}-\d{3}"):courseid>/')
-api.add_resource(CourseDetailByIndex, BASE_URL + '/course/<regex("\d{2}-\d{3}"):courseid>/term/<regex("(f|s|m1|m2)\d{2}"):term>/')
+api.add_resource(CourseDetailByTerm, BASE_URL + '/course/<regex("\d{2}-\d{3}"):courseid>/' + TERM_ENDPOINT)
 # /instructor/:name
 api.add_resource(Instructor, BASE_URL + '/instructor/<name>/')
-
+api.add_resource(InstructorByTerm, BASE_URL + '/instructor/<name>/' + TERM_ENDPOINT)
+# /building/:building
+api.add_resource(Building, BASE_URL + '/building/<building>/')
+api.add_resource(BuildingByTerm, BASE_URL + '/building/<building>/' + TERM_ENDPOINT)
+# /room/:room
+api.add_resource(Room, BASE_URL + '/room/<room>/')
+api.add_resource(RoomByTerm, BASE_URL + '/room/<room>/' + TERM_ENDPOINT)
+# building/:building/room/:room
+api.add_resource(BuildingRoom, BASE_URL + '/building/<building>/room/<room>/')
+api.add_resource(BuildingRoomByTerm, BASE_URL + '/building/<building>/room/<room>/' + TERM_ENDPOINT)
 
 
 if __name__ == '__main__':
+    search.init_es_connection()
     app.run(debug=True)
+
