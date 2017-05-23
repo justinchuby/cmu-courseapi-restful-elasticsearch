@@ -162,7 +162,8 @@ class InstructorByTerm(Resource):
 
 class BuildingByTerm(Resource):
     def get(self, building, term):
-        result = search.get_courses_by_building_room(building, None, index=term)
+        result = search.get_courses_by_building_room(building, None,
+                                                     index=term, size=500)
         return format_response(result)
 
 
@@ -174,19 +175,21 @@ class BuildingByTerm(Resource):
 
 class RoomByTerm(Resource):
     def get(self, room, term):
-        result = search.get_courses_by_building_room(None, room, index=term)
+        result = search.get_courses_by_building_room(None, room,
+                                                     index=term, size=500)
         return format_response(result)
 
 
 class BuildingRoom(Resource):
     def get(self, building, room):
-        result = search.get_courses_by_building_room(building, room)
+        result = search.get_courses_by_building_room(building, room, size=500)
         return format_response(result)
 
 
 class BuildingRoomByTerm(Resource):
     def get(self, building, room, term):
-        result = search.get_courses_by_building_room(building, room, index=term)
+        result = search.get_courses_by_building_room(building, room,
+                                                     index=term, size=100)
         return format_response(result)
 
 

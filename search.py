@@ -123,7 +123,7 @@ class CourseSearcher(Searcher):
         # TODO: check if DH 100 would give DH 2135 and PH 100
         # see if multilevel nesting is needed
         if 'building' in raw_query:
-            building = raw_query['building'][0]
+            building = raw_query['building'][0].upper()
             lec_building_query = Q('match', lectures__times__building = building)
             sec_building_query = Q('match', sections__times__building = building)
             query &= Q('bool', should=[Q('nested',
@@ -137,7 +137,7 @@ class CourseSearcher(Searcher):
                                          )])
 
         if 'room' in raw_query:
-            room = raw_query['room'][0]
+            room = raw_query['room'][0].upper()
             lec_room_query = Q('match', lectures__times__room = room)
             sec_room_query = Q('match', sections__times__room = room)
             query &= Q('bool', should=[Q('nested',
