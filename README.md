@@ -20,6 +20,7 @@ flask-restful
 elasticsearch-dsl>=5.0.0,<6.0.0  # Elasticsearch 5.x
 elasticsearch-dsl>=5.0.0,<6.0.0
 arrow
+certifi
 ```
 
 ## Api Endpoint
