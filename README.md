@@ -17,7 +17,7 @@ You may find the implemented endpoint in the `Api Endpoint` section. You can try
 Python>=3.5
 flask
 flask-restful
-elasticsearch-dsl>=5.0.0,<6.0.0  # Elasticsearch 5.x
+elasticsearch>=5.0.0,<6.0.0  # Elasticsearch 5.x
 elasticsearch-dsl>=5.0.0,<6.0.0
 arrow
 certifi
