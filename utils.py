@@ -2,7 +2,6 @@ import re
 import datetime
 import string
 import copy
-import cmu_info
 
 
 def formatErrMsg(e, header=""):
@@ -55,43 +54,6 @@ def eliminatePunc(s):
 
 def getSearchable(s):
     return splitString(eliminatePunc(s).lower(), " ")
-
-
-##
-## @brief      Gets the full name of a building from its abbreviation.
-##
-## @param      building  (str)
-##
-## @return     (str)
-##
-def getBuildingText(building):
-    _CMU_BUILDINGS_FROM_ABBR = cmu_info.CMU_BUILDINGS_FROM_ABBR
-    if building is None:
-        return "TBA"
-    elif building in _CMU_BUILDINGS_FROM_ABBR:
-        return _CMU_BUILDINGS_FROM_ABBR[building]
-    else:
-        return building
-
-##
-## @brief      Gets the name of the department that offers the course.
-##
-## @param      number_searchable
-##
-## @return     The name of the department if found, original input of not found.
-##
-def getCourseDepartment(number_searchable):
-    try:
-        num = number_searchable[0]
-    except:
-        return ""
-
-    _CMU_NUMBER_DEPARTMENTS = cmu_info.CMU_NUMBER_DEPARTMENTS
-
-    if num in _CMU_NUMBER_DEPARTMENTS:
-        return _CMU_NUMBER_DEPARTMENTS[num]
-    else:
-        return num
 
 
 ##
