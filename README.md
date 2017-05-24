@@ -7,11 +7,11 @@ The online version of the course-api is built with Flask and Elasticsearch. This
 
 ## Current Progress
 
-Working on setting up the ES 5 searver and queries constructor.
+Working on setting up the ES 5 server.
 
 You may find the implemented endpoint in the `Api Endpoint` section. You can try it out by running `python3 api.py` and go to http://localhost:5000/course/v1/course/15-112/ or http://localhost:5000/course/v1/course/15-112/term/f16.
 
-## Development Requirements
+## Requirements
 
 ```
 Python>=3.5
