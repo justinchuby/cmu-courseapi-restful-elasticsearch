@@ -116,6 +116,8 @@ class CourseSearcher(Searcher):
         # Declare the variables to store the tempory nested queries
         lec_nested_queries = {}
         sec_nested_queries = {}
+        lec_name_query = Q()
+        sec_name_query = Q()
 
         if 'instructor' in raw_query:
             instructor = " ".join(raw_query['instructor'])
@@ -166,11 +168,24 @@ class CourseSearcher(Searcher):
             sec_nested_queries['sec_time_query'] = sec_time_query
 
         # Combine all the nested queries
+        _lec_temp = None
+        _sec_temp = None
+        for key in lec_nested_queries:
+            if _lec_temp is None:
+                _lec_temp = lec_nested_queries[key]
+            else:
+                _lec_temp &= lec_nested_queries[key]
+
+        for key in sec_nested_queries:
+            if _sec_temp is None:
+                _sec_temp = sec_nested_queries[key]
+            else:
+                _sec_temp &= sec_nested_queries[key]
+        
         combined_lec_query = Q('nested',
                                query=(
                                    Q('nested',
-                                     query=(lec_nested_queries[key]
-                                            for key in lec_nested_queries),
+                                     query=(_lec_temp),
                                      path='lectures.times') &
                                    lec_name_query
                                ),
@@ -180,8 +195,7 @@ class CourseSearcher(Searcher):
         combined_sec_query = Q('nested',
                                query=(
                                    Q('nested',
-                                     query=(sec_nested_queries[key]
-                                            for key in sec_nested_queries),
+                                     query=(_sec_temp),
                                      path='sections.times') &
                                    sec_name_query),
                                path='sections',
