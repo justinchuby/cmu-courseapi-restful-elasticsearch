@@ -376,7 +376,7 @@ def get_courses_by_datetime(date_time_str, size=200):
             }
         }
         return output
-    index = utils.get_index_from_date(date_time.datetime)
+    index = utils.get_course_index_from_date(date_time.datetime)
     searcher = CourseSearcher({'datetime': [date_time]}, index=index,  size=size)
     response = searcher.execute()
     output = format_courses_output(response)
