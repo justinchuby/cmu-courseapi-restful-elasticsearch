@@ -145,19 +145,26 @@ class CourseSearcher(Searcher):
             lec_room_query = Q('match', lectures__times__room = room)
             sec_room_query = Q('match', sections__times__room = room)
             query &= Q('bool', must=[
-                         Q('bool', should=[Q('nested',
-                                             query=lec_building_query & \
-                                                lec_room_query,
-                                             path='lectures.times',
-                                             # inner_hits={}
-                                             ),
-                                           Q('nested',
-                                             query=sec_building_query & \
-                                                sec_room_query,
-                                             path='sections.times',
-                                             # inner_hits={}
-                                             )])
-                                            ])
+                        Q('bool', should=[
+                            Q('nested', 
+                                query= Q('nested',
+                                         query=lec_building_query & 
+                                            lec_room_query,
+                                         path='lectures.times',
+                                         ),
+                                path='lectures',
+                                inner_hits={}
+                              ),
+                            Q('nested', 
+                                query= Q('nested',
+                                         query=sec_building_query &
+                                            sec_room_query,
+                                         path='sections.times',
+                                         ),
+                                path='sections',
+                                inner_hits={})
+                            ])
+                        ])
 
         # TODO: check if DH 100 would give DH 2135 and PH 100
         # see if multilevel nesting is needed
@@ -385,4 +392,5 @@ def get_courses_by_datetime(date_time_str, size=200):
 
 
 if __name__ == '__main__':
+    config.DEBUG = True
     init_es_connection()
