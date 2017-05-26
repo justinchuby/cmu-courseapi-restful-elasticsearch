@@ -125,16 +125,18 @@ class CourseSearcher(Searcher):
             sec_name_query = Q('match',
                                sections__instructors = _query_obj)
 
-            query &= Q('bool', should=[Q('nested',
-                                         query=lec_name_query,
-                                         path='lectures',
-                                         inner_hits={}),
-                                       Q('nested',
-                                         query=sec_name_query,
-                                         path='sections',
-                                         inner_hits={}
-                                         )
-                                       ])
+            query &= Q('bool', must=[
+                         Q('bool', should=[Q('nested',
+                                             query=lec_name_query,
+                                             path='lectures',
+                                             inner_hits={}),
+                                           Q('nested',
+                                             query=sec_name_query,
+                                             path='sections',
+                                             inner_hits={}
+                                             )
+                                        ])
+                                    ])
 
         if 'building' in raw_query and 'room' in raw_query:
             building = raw_query['building'][0].upper()
@@ -248,7 +250,9 @@ class CourseSearcher(Searcher):
                                  path='sections',
                                  inner_hits={}
                                  )            
-            query &= Q('bool', should=[nested_lec_query, nested_sec_query])
+            query &= Q('bool', must=[
+                        Q('bool', should=[nested_lec_query, nested_sec_query])]
+                    )
 
         if config.DEBUG:
             print(json.dumps(query.to_dict(), indent=2))
