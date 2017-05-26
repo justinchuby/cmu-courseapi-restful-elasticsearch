@@ -136,36 +136,79 @@ class CourseSearcher(Searcher):
                                          )
                                        ])
 
+        if 'building' in raw_query and 'room' in raw_query:
+            building = raw_query['building'][0].upper()
+            room = raw_query['room'][0].upper()
+
+            lec_building_query = Q('match', lectures__times__building = building)
+            sec_building_query = Q('match', sections__times__building = building)
+            lec_room_query = Q('match', lectures__times__room = room)
+            sec_room_query = Q('match', sections__times__room = room)
+            query &= Q('bool', must=[
+                         Q('bool', should=[Q('nested',
+                                             query=lec_building_query & \
+                                                lec_room_query,
+                                             path='lectures.times',
+                                             # inner_hits={}
+                                             ),
+                                           Q('nested',
+                                             query=sec_building_query & \
+                                                sec_room_query,
+                                             path='sections.times',
+                                             # inner_hits={}
+                                             )])
+                                            ])
 
         # TODO: check if DH 100 would give DH 2135 and PH 100
         # see if multilevel nesting is needed
-        if 'building' in raw_query:
+        elif 'building' in raw_query:
             building = raw_query['building'][0].upper()
             lec_building_query = Q('match', lectures__times__building = building)
             sec_building_query = Q('match', sections__times__building = building)
-            query &= Q('bool', should=[Q('nested',
+            query &= Q('bool', must=[
+                        Q('bool', should=[
+                            Q('nested', 
+                                query= Q('nested',
                                          query=lec_building_query,
                                          path='lectures.times',
-                                         inner_hits={}),
-                                       Q('nested',
+                                         ),
+                                path='lectures',
+                                inner_hits={}
+                              ),
+                            Q('nested', 
+                                query= Q('nested',
                                          query=sec_building_query,
                                          path='sections.times',
-                                         inner_hits={}
-                                         )])
+                                         ),
+                                path='sections',
+                                inner_hits={})
+                            ])
+                        ])
 
-        if 'room' in raw_query:
+        elif 'room' in raw_query:
             room = raw_query['room'][0].upper()
             lec_room_query = Q('match', lectures__times__room = room)
             sec_room_query = Q('match', sections__times__room = room)
-            query &= Q('bool', should=[Q('nested',
+
+            query &= Q('bool', must=[
+                        Q('bool', should=[
+                            Q('nested', 
+                                query= Q('nested',
                                          query=lec_room_query,
                                          path='lectures.times',
-                                         inner_hits={}),
-                                       Q('nested',
+                                         ),
+                                path='lectures',
+                                inner_hits={}
+                              ),
+                            Q('nested', 
+                                query= Q('nested',
                                          query=sec_room_query,
                                          path='sections.times',
-                                         inner_hits={}
-                                         )])
+                                         ),
+                                path='sections',
+                                inner_hits={})
+                            ])
+                        ])
 
         if 'datetime' in raw_query:
             # Get day and time from the datetime object

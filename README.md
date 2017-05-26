@@ -48,3 +48,7 @@ course/v1/
 - [x]	.../term/:term
 		:term: f17, current
 ```
+
+## Virtual Environment
+
+`source venv/bin/activate`, `deactivate`
