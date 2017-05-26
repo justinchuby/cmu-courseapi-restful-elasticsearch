@@ -3,11 +3,13 @@ import copy
 import json
 import arrow
 import datetime
+
 import elasticsearch
 from elasticsearch_dsl import Search
 from elasticsearch_dsl.query import Q
 from elasticsearch_dsl.connections import connections
 import certifi
+
 import config
 from config import ES_HOSTS, ES_HTTP_AUTH, ES_COURSE_INDEX_PREFIX
 from components import Message
@@ -92,6 +94,7 @@ class CourseSearcher(Searcher):
             self.index = utils.get_current_course_index()
 
     # @brief      Sets the index from short representation of a term. e.g. f17
+    #               To the ES index
     def set_index(self, term):
         self.index = adjust_course_index(term)
 
@@ -170,18 +173,18 @@ class CourseSearcher(Searcher):
         # Combine all the nested queries
         _lec_temp = None
         _sec_temp = None
-        for key in lec_nested_queries:
+        for key, value in lec_nested_queries.items():
             if _lec_temp is None:
-                _lec_temp = lec_nested_queries[key]
+                _lec_temp = value
             else:
-                _lec_temp &= lec_nested_queries[key]
+                _lec_temp &= value
 
-        for key in sec_nested_queries:
+        for key, value in sec_nested_queries.items():
             if _sec_temp is None:
-                _sec_temp = sec_nested_queries[key]
+                _sec_temp = value
             else:
-                _sec_temp &= sec_nested_queries[key]
-        
+                _sec_temp &= value
+
         combined_lec_query = Q('nested',
                                query=(
                                    Q('nested',
