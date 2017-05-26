@@ -2,6 +2,7 @@ import re
 import datetime
 import string
 import copy
+from config import ES_COURSE_INDEX_PREFIX
 
 
 def formatErrMsg(e, header=""):
@@ -111,11 +112,15 @@ def get_mini(current_date=None):
     return 0
 
 
-def get_current_index():
-    return get_index_from_date(datetime.date.today())
+def get_current_course_index():
+    return get_course_index_from_date(datetime.date.today())
 
 
-def get_index_from_date(date):
+def get_course_index_from_date(date):
+    return ES_COURSE_INDEX_PREFIX + get_semester_short_from_date(date)
+
+
+def get_semester_short_from_date(date):
     mini = get_mini(date)
     if 1 <= mini <= 2:
         semester = "f"
@@ -125,8 +130,8 @@ def get_index_from_date(date):
         semester = "m1"
     else:
         semester = "m2"
-    index = semester + str(date.year)[2:]
-    return index
+    semester = semester + str(date.year)[2:]
+    return semester
 
 
 def get_semester_from_date(date):

@@ -8,10 +8,20 @@ from elasticsearch_dsl import Search
 from elasticsearch_dsl.query import Q
 from elasticsearch_dsl.connections import connections
 import certifi
-from config import ES_HOSTS, ES_HTTP_AUTH
 import config
+from config import ES_HOSTS, ES_HTTP_AUTH, ES_COURSE_INDEX_PREFIX
 from components import Message
 import utils
+
+
+# Adjust the index for courses. For example, f17 -> course-f17
+def adjust_course_index(index):
+    try:
+        if re.match('^(f|s|m1|m2)\d{2}$', index):
+            return ES_COURSE_INDEX_PREFIX + index
+    except:
+        pass
+    return index
 
 
 ##
@@ -77,8 +87,13 @@ class CourseSearcher(Searcher):
 
     def __init__(self, raw_query, index=None, size=_default_size):
         super().__init__(raw_query, index, size)
+        self.set_index(self.index)
         if self.index == 'current':
-            self.index = utils.get_current_index()
+            self.index = utils.get_current_course_index()
+
+    # @brief      Sets the index from short representation of a term. e.g. f17
+    def set_index(self, term):
+        self.index = adjust_course_index(term)
 
     def generate_query(self):
         raw_query = self.raw_query
@@ -86,6 +101,7 @@ class CourseSearcher(Searcher):
 
         if 'courseid' in raw_query:
             courseid = raw_query['courseid'][0]
+            print(self.index)
             if self.index is None:
                 current_semester = utils.get_semester_from_date(datetime.datetime.today())
                 id_query = Q('bool', 
