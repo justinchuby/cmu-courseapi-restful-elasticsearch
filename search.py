@@ -110,8 +110,17 @@ class CourseSearcher(Searcher):
                              )
             else:
                 id_query = Q('term', id=courseid)
-
             query &= id_query
+
+        # Declare the variables to store the tempory nested queries
+        lec_name_query = Q()
+        sec_name_query = Q()
+        lec_building_query = Q()
+        sec_building_query = Q()
+        lec_room_query = Q()
+        sec_room_query = Q()
+        lec_time_query = Q()
+        sec_time_query = Q()
 
         if 'instructor' in raw_query:
             instructor = " ".join(raw_query['instructor'])
@@ -125,99 +134,17 @@ class CourseSearcher(Searcher):
             sec_name_query = Q('match',
                                sections__instructors = _query_obj)
 
-            query &= Q('bool', must=[
-                         Q('bool', should=[Q('nested',
-                                             query=lec_name_query,
-                                             path='lectures',
-                                             inner_hits={}),
-                                           Q('nested',
-                                             query=sec_name_query,
-                                             path='sections',
-                                             inner_hits={}
-                                             )
-                                        ])
-                                    ])
-
-        if 'building' in raw_query and 'room' in raw_query:
-            building = raw_query['building'][0].upper()
-            room = raw_query['room'][0].upper()
-
-            lec_building_query = Q('match', lectures__times__building = building)
-            sec_building_query = Q('match', sections__times__building = building)
-            lec_room_query = Q('match', lectures__times__room = room)
-            sec_room_query = Q('match', sections__times__room = room)
-            query &= Q('bool', must=[
-                        Q('bool', should=[
-                            Q('nested', 
-                                query= Q('nested',
-                                         query=lec_building_query & 
-                                            lec_room_query,
-                                         path='lectures.times',
-                                         ),
-                                path='lectures',
-                                inner_hits={}
-                              ),
-                            Q('nested', 
-                                query= Q('nested',
-                                         query=sec_building_query &
-                                            sec_room_query,
-                                         path='sections.times',
-                                         ),
-                                path='sections',
-                                inner_hits={})
-                            ])
-                        ])
-
         # TODO: check if DH 100 would give DH 2135 and PH 100
         # see if multilevel nesting is needed
         elif 'building' in raw_query:
             building = raw_query['building'][0].upper()
             lec_building_query = Q('match', lectures__times__building = building)
             sec_building_query = Q('match', sections__times__building = building)
-            query &= Q('bool', must=[
-                        Q('bool', should=[
-                            Q('nested', 
-                                query= Q('nested',
-                                         query=lec_building_query,
-                                         path='lectures.times',
-                                         ),
-                                path='lectures',
-                                inner_hits={}
-                              ),
-                            Q('nested', 
-                                query= Q('nested',
-                                         query=sec_building_query,
-                                         path='sections.times',
-                                         ),
-                                path='sections',
-                                inner_hits={})
-                            ])
-                        ])
 
         elif 'room' in raw_query:
             room = raw_query['room'][0].upper()
             lec_room_query = Q('match', lectures__times__room = room)
             sec_room_query = Q('match', sections__times__room = room)
-
-            query &= Q('bool', must=[
-                        Q('bool', should=[
-                            Q('nested', 
-                                query= Q('nested',
-                                         query=lec_room_query,
-                                         path='lectures.times',
-                                         ),
-                                path='lectures',
-                                inner_hits={}
-                              ),
-                            Q('nested', 
-                                query= Q('nested',
-                                         query=sec_room_query,
-                                         path='sections.times',
-                                         ),
-                                path='sections',
-                                inner_hits={})
-                            ])
-                        ])
 
         if 'datetime' in raw_query:
             # Get day and time from the datetime object
@@ -233,26 +160,37 @@ class CourseSearcher(Searcher):
             lec_time_query = Q('bool', must=[Q('match', lectures__times__days = day),
                                              Q('range', lectures__times__begin = _times_begin),
                                              Q('range', lectures__times__end = _times_end)])
-            sec_time_query = Q('bool', must=[Q('match', lectures__times__days = day),
+            sec_time_query = Q('bool', must=[Q('match', sections__times__days = day),
                                              Q('range', sections__times__begin = _times_begin),
                                              Q('range', sections__times__end = _times_end)])
-            nested_lec_query = Q('nested',
-                                 query=Q('nested',
-                                         query=lec_time_query,
-                                         path='lectures.times'),
-                                 path='lectures',
-                                 inner_hits={}
-                                 )
-            nested_sec_query = Q('nested',
-                                 query=Q('nested',
-                                         query=sec_time_query,
-                                         path='sections.times'),
-                                 path='sections',
-                                 inner_hits={}
-                                 )            
-            query &= Q('bool', must=[
-                        Q('bool', should=[nested_lec_query, nested_sec_query])]
-                    )
+
+        # Combine all the nested queries
+        nested_lec_query = Q('nested',
+                             query=(
+                                Q('nested',
+                                     query=(lec_building_query &
+                                            lec_room_query &
+                                            lec_time_query),
+                                     path='lectures.times') &
+                                lec_name_query
+                                ),
+                             path='lectures',
+                             inner_hits={}
+                             )
+        nested_sec_query = Q('nested',
+                             query=(
+                                Q('nested',
+                                     query=(sec_building_query &
+                                            sec_room_query &
+                                            sec_time_query),
+                                     path='sections.times') &
+                                sec_name_query),
+                             path='sections',
+                             inner_hits={}
+                             )            
+        query &= Q('bool', must=[
+                    Q('bool', should=[nested_lec_query, nested_sec_query])]
+                )
 
         if config.DEBUG:
             print(json.dumps(query.to_dict(), indent=2))
