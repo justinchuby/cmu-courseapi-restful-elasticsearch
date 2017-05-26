@@ -25,17 +25,17 @@ def adjust_course_index(index):
 
 
 ##
-## @brief      The Searcher object that parses input and generates queries.
+# @brief      The Searcher object that parses input and generates queries.
 ##
 class Searcher(object):
     _doc_type = None
     _default_size = 5
 
     ##
-    ## @brief      init
+    # @brief      init
     ##
-    ## @param      self
-    ## @param      s           The query text
+    # @param      self
+    # @param      s           The query text
     ##
     def __init__(self, raw_query, index=None, size=_default_size):
         self.raw_query = copy.deepcopy(raw_query)
@@ -72,9 +72,9 @@ class Searcher(object):
         return response
 
     ##
-    ## @brief      Generate the query for the database.
+    # @brief      Generate the query for the database.
     ##
-    ## @return     (dict) The query for querying the database.
+    # @return     (dict) The query for querying the database.
     ##
     def generate_query(self):
         query = Q()
@@ -103,10 +103,11 @@ class CourseSearcher(Searcher):
             courseid = raw_query['courseid'][0]
             print(self.index)
             if self.index is None:
-                current_semester = utils.get_semester_from_date(datetime.datetime.today())
-                id_query = Q('bool', 
-                             must = Q('term', id=courseid),
-                             should = Q('match', name=current_semester)
+                current_semester = utils.get_semester_from_date(
+                    datetime.datetime.today())
+                id_query = Q('bool',
+                             must=Q('term', id=courseid),
+                             should=Q('match', name=current_semester)
                              )
             else:
                 id_query = Q('term', id=courseid)
@@ -130,21 +131,21 @@ class CourseSearcher(Searcher):
                 _query_obj['fuzziness'] = 'AUTO'
 
             lec_name_query = Q('match',
-                               lectures__instructors = _query_obj)
+                               lectures__instructors=_query_obj)
             sec_name_query = Q('match',
-                               sections__instructors = _query_obj)
+                               sections__instructors=_query_obj)
 
         # TODO: check if DH 100 would give DH 2135 and PH 100
         # see if multilevel nesting is needed
         elif 'building' in raw_query:
             building = raw_query['building'][0].upper()
-            lec_building_query = Q('match', lectures__times__building = building)
-            sec_building_query = Q('match', sections__times__building = building)
+            lec_building_query = Q('match', lectures__times__building=building)
+            sec_building_query = Q('match', sections__times__building=building)
 
         elif 'room' in raw_query:
             room = raw_query['room'][0].upper()
-            lec_room_query = Q('match', lectures__times__room = room)
-            sec_room_query = Q('match', sections__times__room = room)
+            lec_room_query = Q('match', lectures__times__room=room)
+            sec_room_query = Q('match', sections__times__room=room)
 
         if 'datetime' in raw_query:
             # Get day and time from the datetime object
@@ -157,37 +158,37 @@ class CourseSearcher(Searcher):
             _times_begin = {'lte': time, 'format': 'hh:mma'}
             _times_end = {'gt': time, 'format': 'hh:mma'}
 
-            lec_time_query = Q('bool', must=[Q('match', lectures__times__days = day),
-                                             Q('range', lectures__times__begin = _times_begin),
-                                             Q('range', lectures__times__end = _times_end)])
-            sec_time_query = Q('bool', must=[Q('match', sections__times__days = day),
-                                             Q('range', sections__times__begin = _times_begin),
-                                             Q('range', sections__times__end = _times_end)])
+            lec_time_query = Q('bool', must=[Q('match', lectures__times__days=day),
+                                             Q('range', lectures__times__begin=_times_begin),
+                                             Q('range', lectures__times__end=_times_end)])
+            sec_time_query = Q('bool', must=[Q('match', sections__times__days=day),
+                                             Q('range', sections__times__begin=_times_begin),
+                                             Q('range', sections__times__end=_times_end)])
 
         # Combine all the nested queries
         nested_lec_query = Q('nested',
                              query=(
-                                Q('nested',
-                                     query=(lec_building_query &
-                                            lec_room_query &
-                                            lec_time_query),
-                                     path='lectures.times') &
-                                lec_name_query
-                                ),
+                                 Q('nested',
+                                   query=(lec_building_query &
+                                          lec_room_query &
+                                          lec_time_query),
+                                   path='lectures.times') &
+                                 lec_name_query
+                             ),
                              path='lectures',
                              inner_hits={}
                              )
         nested_sec_query = Q('nested',
                              query=(
-                                Q('nested',
-                                     query=(sec_building_query &
-                                            sec_room_query &
-                                            sec_time_query),
-                                     path='sections.times') &
-                                sec_name_query),
+                                 Q('nested',
+                                   query=(sec_building_query &
+                                          sec_room_query &
+                                          sec_time_query),
+                                   path='sections.times') &
+                                 sec_name_query),
                              path='sections',
                              inner_hits={}
-                             )            
+                             )
         query &= Q('bool', must=[nested_lec_query | nested_sec_query])
 
         if config.DEBUG:
@@ -313,7 +314,8 @@ def get_courses_by_datetime(date_time_str, size=200):
         }
         return output
     index = utils.get_course_index_from_date(date_time.datetime)
-    searcher = CourseSearcher({'datetime': [date_time]}, index=index,  size=size)
+    searcher = CourseSearcher(
+        {'datetime': [date_time]}, index=index,  size=size)
     response = searcher.execute()
     output = format_courses_output(response)
     return output
