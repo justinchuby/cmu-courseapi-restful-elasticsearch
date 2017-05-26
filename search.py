@@ -114,14 +114,8 @@ class CourseSearcher(Searcher):
             query &= id_query
 
         # Declare the variables to store the tempory nested queries
-        lec_name_query = Q()
-        sec_name_query = Q()
-        lec_building_query = Q()
-        sec_building_query = Q()
-        lec_room_query = Q()
-        sec_room_query = Q()
-        lec_time_query = Q()
-        sec_time_query = Q()
+        lec_nested_queries = {}
+        sec_nested_queries = {}
 
         if 'instructor' in raw_query:
             instructor = " ".join(raw_query['instructor'])
@@ -141,11 +135,15 @@ class CourseSearcher(Searcher):
             building = raw_query['building'][0].upper()
             lec_building_query = Q('match', lectures__times__building=building)
             sec_building_query = Q('match', sections__times__building=building)
+            lec_nested_queries['lec_building_query'] = lec_building_query
+            sec_nested_queries['sec_building_query'] = sec_building_query
 
         if 'room' in raw_query:
             room = raw_query['room'][0].upper()
             lec_room_query = Q('match', lectures__times__room=room)
             sec_room_query = Q('match', sections__times__room=room)
+            lec_nested_queries['lec_room_query'] = lec_room_query
+            sec_nested_queries['sec_room_query'] = sec_room_query
 
         if 'datetime' in raw_query:
             # Get day and time from the datetime object
@@ -164,32 +162,32 @@ class CourseSearcher(Searcher):
             sec_time_query = Q('bool', must=[Q('match', sections__times__days=day),
                                              Q('range', sections__times__begin=_times_begin),
                                              Q('range', sections__times__end=_times_end)])
+            lec_nested_queries['lec_time_query'] = lec_time_query
+            sec_nested_queries['sec_time_query'] = sec_time_query
 
         # Combine all the nested queries
-        nested_lec_query = Q('nested',
-                             query=(
-                                 Q('nested',
-                                   query=(lec_building_query &
-                                          lec_room_query &
-                                          lec_time_query),
-                                   path='lectures.times') &
-                                 lec_name_query
-                             ),
-                             path='lectures',
-                             inner_hits={}
-                             )
-        nested_sec_query = Q('nested',
-                             query=(
-                                 Q('nested',
-                                   query=(sec_building_query &
-                                          sec_room_query &
-                                          sec_time_query),
-                                   path='sections.times') &
-                                 sec_name_query),
-                             path='sections',
-                             inner_hits={}
-                             )
-        query &= Q('bool', must=[nested_lec_query | nested_sec_query])
+        combined_lec_query = Q('nested',
+                               query=(
+                                   Q('nested',
+                                     query=(lec_nested_queries[key]
+                                            for key in lec_nested_queries),
+                                     path='lectures.times') &
+                                   lec_name_query
+                               ),
+                               path='lectures',
+                               inner_hits={}
+                               )
+        combined_sec_query = Q('nested',
+                               query=(
+                                   Q('nested',
+                                     query=(sec_nested_queries[key]
+                                            for key in sec_nested_queries),
+                                     path='sections.times') &
+                                   sec_name_query),
+                               path='sections',
+                               inner_hits={}
+                               )
+        query &= Q('bool', must=[combined_lec_query | combined_sec_query])
 
         if config.DEBUG:
             print(json.dumps(query.to_dict(), indent=2))
