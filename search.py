@@ -188,9 +188,7 @@ class CourseSearcher(Searcher):
                              path='sections',
                              inner_hits={}
                              )            
-        query &= Q('bool', must=[
-                    Q('bool', should=[nested_lec_query, nested_sec_query])]
-                )
+        query &= Q('bool', must=[nested_lec_query | nested_sec_query])
 
         if config.DEBUG:
             print(json.dumps(query.to_dict(), indent=2))
