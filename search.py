@@ -10,6 +10,7 @@ from elasticsearch_dsl.connections import connections
 import certifi
 from config import ES_HOSTS, ES_HTTP_AUTH
 import config
+from components import Message
 import utils
 
 
@@ -301,7 +302,7 @@ def get_courses_by_datetime(date_time_str, size=200):
         output['response'] = {
             'status': 400,
             'error': {
-                'message': 'Failed to parse datetime. Please check format agrees with ISO-8601.'
+                'message': Message.DATETIME_PARSE_FAIL
             }
         }
         return output

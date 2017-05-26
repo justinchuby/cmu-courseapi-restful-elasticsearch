@@ -3,7 +3,7 @@ from flask_restful import Resource, Api, reqparse
 from werkzeug.routing import BaseConverter
 import config
 from config import BASE_URL
-from config import Message
+from components import Message
 import search
 
 
