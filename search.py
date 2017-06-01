@@ -171,8 +171,8 @@ class CourseSearcher(Searcher):
             sec_nested_queries['sec_time_query'] = sec_time_query
 
         # Combine all the nested queries
-        _lec_temp = None
-        _sec_temp = None
+        _lec_temp = Q()
+        _sec_temp = Q()
         for key, value in lec_nested_queries.items():
             if _lec_temp is None:
                 _lec_temp = value
