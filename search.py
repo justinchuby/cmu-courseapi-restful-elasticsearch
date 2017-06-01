@@ -174,17 +174,22 @@ class CourseSearcher(Searcher):
             date_time = raw_query['datetime'][0].to('America/New_York')
             day = date_time.isoweekday() % 7
             time = date_time.time().strftime("%I:%M%p")
+            # HERE
+
+            # NOTE: Known bug: if the time spans across two days, it would
+            # give a wrong result because day is calculated based 
+            # on the begin time
 
             # Construct the query based on day and time
-            _times_begin = {'lte': time, 'format': 'hh:mma'}
-            _times_end = {'gt': time, 'format': 'hh:mma'}
+            _times_begin_query = {'lte': time, 'format': 'hh:mma'}
+            _times_end_query = {'gt': time, 'format': 'hh:mma'}
 
             lec_time_query = Q('bool', must=[Q('match', lectures__times__days=day),
-                                             Q('range', lectures__times__begin=_times_begin),
-                                             Q('range', lectures__times__end=_times_end)])
+                                             Q('range', lectures__times__begin=_times_begin_query),
+                                             Q('range', lectures__times__end=_times_end_query)])
             sec_time_query = Q('bool', must=[Q('match', sections__times__days=day),
-                                             Q('range', sections__times__begin=_times_begin),
-                                             Q('range', sections__times__end=_times_end)])
+                                             Q('range', sections__times__begin=_times_begin_query),
+                                             Q('range', sections__times__end=_times_end_query)])
             lec_nested_queries['lec_time_query'] = lec_time_query
             sec_nested_queries['sec_time_query'] = sec_time_query
 
@@ -334,9 +339,9 @@ def get_courses_by_building_room(building, room, index=None, size=100):
     return output
 
 
-def get_courses_by_datetime(date_time_str, size=200):
+def get_courses_by_datetime(datetime_str, span_minutes=0, size=200):
     try:
-        date_time = arrow.get(date_time_str)
+        date_time = arrow.get(datetime_str)
     except:
         output = init_courses_output()
         output['response'] = {
@@ -348,7 +353,10 @@ def get_courses_by_datetime(date_time_str, size=200):
         return output
     index = utils.get_course_index_from_date(date_time.datetime)
     searcher = CourseSearcher(
-        {'datetime': [date_time]}, index=index,  size=size)
+        {'datetime': [date_time],
+         'span': [span_minutes]},
+        index=index, size=size
+    )
     response = searcher.execute()
     output = format_courses_output(response)
     return output
