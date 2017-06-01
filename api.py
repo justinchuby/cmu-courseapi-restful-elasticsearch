@@ -33,9 +33,7 @@ app.url_map.converters['regex'] = RegexConverter
 
 class HomeHome(Resource):
     def get(self):
-        args = request.args
-        return {'message': Message.HOME_MESSAGE,
-                'args': args}
+        return {'message': Message.HOME_MESSAGE}
 
 
 class CourseapiHome(Resource):
