@@ -37,6 +37,10 @@ course/v1/
 	- [x]	?fuzzy
 - [x]	/datetime/:datetime
 		# current happening classes at given time
+		:datetime: in ISO 8601 format
+- [ ]	/datetime/:datetime/span/:span
+		# gets courses that happens within a span of time
+		:span: The time span, in minutes, no more than 120 minutes
 - [x]	/building/:building/term/:term
 		:building: DH
 - [x]	/room/:room/term/:term

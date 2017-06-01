@@ -4,6 +4,7 @@ import json
 import arrow
 import datetime
 
+# Elasticsearch libraries, certifi required by Elasticsearch
 import elasticsearch
 from elasticsearch_dsl import Search
 from elasticsearch_dsl.query import Q
