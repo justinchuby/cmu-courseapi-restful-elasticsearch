@@ -17,13 +17,13 @@ import utils
 
 
 # Adjust the index for courses. For example, f17 -> course-f17
-def adjust_course_index(index):
-    try:
-        if re.match('^(f|s|m1|m2)\d{2}$', index):
-            return ES_COURSE_INDEX_PREFIX + index
-    except:
-        pass
-    return index
+# def adjust_course_index(index):
+#     try:
+#         if re.match('^(f|s|m1|m2)\d{2}$', index):
+#             return ES_COURSE_INDEX_PREFIX + index
+#     except:
+#         pass
+#     return index
 
 
 ##
@@ -47,6 +47,14 @@ class Searcher(object):
 
     def __repr__(self):
         return "<Searcher Object: raw_query={}>".format(repr(self.raw_query))
+
+    @property
+    def index(self):
+        return self._index
+
+    @index.setter
+    def index(self, value):
+        self._index = value
 
     def execute(self):
         # if index is None:
@@ -89,14 +97,23 @@ class CourseSearcher(Searcher):
 
     def __init__(self, raw_query, index=None, size=_default_size):
         super().__init__(raw_query, index, size)
-        self.set_index(self.index)
-        if self.index == 'current':
-            self.index = utils.get_current_course_index()
 
     # @brief      Sets the index from short representation of a term. e.g. f17
     #               To the ES index
-    def set_index(self, term):
-        self.index = adjust_course_index(term)
+    @property
+    def index(self):
+        return self._index
+
+    @index.setter
+    def index(self, value):
+        if value is None:
+            self._index = value
+        elif value == 'current':
+            self._index = utils.get_current_course_index()
+        elif re.match('^(f|s|m1|m2)\d{2}$', value):
+            self._index = ES_COURSE_INDEX_PREFIX + value
+        else:
+            self._index = value
 
     def generate_query(self):
         raw_query = self.raw_query
