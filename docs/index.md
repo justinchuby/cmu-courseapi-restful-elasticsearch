@@ -1,3 +1,7 @@
+---
+title: ScottyLabs Course API Online
+
+---
 
 ## Introduction
 
