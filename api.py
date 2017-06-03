@@ -100,7 +100,7 @@ def get_course_detail(courseid, index):
     elif 'error' not in result['response']:
         # The course does not exist in the given index
         response = {
-            'status': '404',
+            'status': 404,
             'error': {
                 'message': 'Cannot find %s in %s' % (courseid, index)
             }
@@ -108,7 +108,7 @@ def get_course_detail(courseid, index):
         code = 404
     elif (result['response'].get('status') == 404):
         response = {
-            'status': '404',
+            'status': 404,
             'error': {
                 'message': 'Cannot find %s in %s' % (courseid, index)
             }
