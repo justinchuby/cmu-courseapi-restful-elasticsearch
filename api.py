@@ -201,7 +201,6 @@ class BuildingRoomByTerm(Resource):
 class Datetime(Resource):
     @utils.word_limit
     def get(self, datetime_str):
-        print(datetime_str)
         result = search.get_courses_by_datetime(datetime_str, size=500)
         return format_response(result)
 
