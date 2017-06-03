@@ -164,8 +164,7 @@ Gets courses that start/happen within a span of time, starting from `datetime`.
 
 ### GET `/building/:building/term/:term`
 `building` is the abbreviation of the building, for example, DH for Doherty
-Hall, GHC for Gates and Hillman Centers. The legend can be found on
-http://www.cmu.edu/hub/legend.html.
+Hall, GHC for Gates and Hillman Centers. The legend can be found [here](http://www.cmu.edu/hub/legend.html).
 
 `term` is required.
 
