@@ -2,7 +2,7 @@
 ## Introduction
 
 ScottyLabs offers the Course API that provides information about CMU courses.
-The documentation can be found [here](https://github.com/ScottyLabs/course-api)
+The documentation can be found [here](https://github.com/ScottyLabs/course-api).
 
 This online version of the course-api is built with Flask and Elasticsearch.
 The Flask server serves as a gateway between the client and the Elasticsearch
@@ -142,7 +142,7 @@ Response format:
     "courses": [<ScottyLabs Course Object>]
 }
 ```
-Notice the courses are now under `courses` and not `course` and are stores in
+Notice the courses are now under `courses` and not `course` and are stored in
 an array.
 
 
