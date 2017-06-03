@@ -327,6 +327,7 @@ def get_courses_by_instructor(name, fuzzy=False, index=None, size=100):
     output = format_courses_output(response)
     return output
 
+
 def get_courses_by_building_room(building, room, index=None, size=100):
     assert(building is not None or room is not None)
     raw_query = dict()
@@ -339,13 +340,14 @@ def get_courses_by_building_room(building, room, index=None, size=100):
     output = format_courses_output(response)
     return output
 
+
 def get_courses_by_datetime(datetime_str, span_str=None, size=200):
     span_minutes = 0
     if span_str is not None:
         try:
             span_minutes = int(span_str)
             if not (config.SPAN_LOWER_LIMIT <= span_minutes <=
-                    config.SPAN_HIGHER_LIMIT):
+                    config.SPAN_UPPER_LIMIT):
                 raise(Exception(Message.SPAN_PARSE_FAIL))
         except:
             output = init_courses_output()
