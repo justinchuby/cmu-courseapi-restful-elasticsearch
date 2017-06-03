@@ -15,7 +15,7 @@ api = Api(app)
 
 # Raygun
 if config.RAYGUN_APIKEY is not None:
-    flask.Provider(app, config.RAYGUN_SECRET).attach()
+    flask.Provider(app, config.RAYGUN_APIKEY).attach()
 
 ##
 ## Startup script
