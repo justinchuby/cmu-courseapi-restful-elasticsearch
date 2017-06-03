@@ -5,6 +5,7 @@ import config
 from config import BASE_URL
 from components import Message
 import search
+import utils
 
 
 app = Flask(__name__)
@@ -129,6 +130,7 @@ class CourseDetailByTerm(Resource):
 
 
 class Instructor(Resource):
+    @utils.word_limit
     def get(self, name):
         args = request.args
         fuzzy = False
@@ -142,6 +144,7 @@ class InstructorByTerm(Resource):
     fuzzy_parser = reqparse.RequestParser()
     fuzzy_parser.add_argument('fuzzy')
 
+    @utils.word_limit
     def get(self, name, term):
         args = request.args
         fuzzy = False
@@ -159,6 +162,7 @@ class InstructorByTerm(Resource):
 
 
 class BuildingByTerm(Resource):
+    @utils.word_limit
     def get(self, building, term):
         result = search.get_courses_by_building_room(building, None,
                                                      index=term, size=500)
@@ -172,6 +176,7 @@ class BuildingByTerm(Resource):
 
 
 class RoomByTerm(Resource):
+    @utils.word_limit
     def get(self, room, term):
         result = search.get_courses_by_building_room(None, room,
                                                      index=term, size=500)
@@ -179,12 +184,14 @@ class RoomByTerm(Resource):
 
 
 class BuildingRoom(Resource):
+    @utils.word_limit
     def get(self, building, room):
         result = search.get_courses_by_building_room(building, room, size=500)
         return format_response(result)
 
 
 class BuildingRoomByTerm(Resource):
+    @utils.word_limit
     def get(self, building, room, term):
         result = search.get_courses_by_building_room(building, room,
                                                      index=term, size=100)
@@ -192,12 +199,15 @@ class BuildingRoomByTerm(Resource):
 
 
 class Datetime(Resource):
+    @utils.word_limit
     def get(self, datetime_str):
+        print(datetime_str)
         result = search.get_courses_by_datetime(datetime_str, size=500)
         return format_response(result)
 
 
 class DatetimeSpan(Resource):
+    @utils.word_limit
     def get(self, datetime_str, span_str):
         result = search.get_courses_by_datetime(datetime_str, span_str, size=500)
         return format_response(result)

@@ -27,6 +27,7 @@ import utils
 #     return index
 
 
+
 ##
 # @brief      The Searcher object that parses input and generates queries.
 ##
@@ -326,7 +327,6 @@ def get_courses_by_instructor(name, fuzzy=False, index=None, size=100):
     output = format_courses_output(response)
     return output
 
-
 def get_courses_by_building_room(building, room, index=None, size=100):
     assert(building is not None or room is not None)
     raw_query = dict()
@@ -338,7 +338,6 @@ def get_courses_by_building_room(building, room, index=None, size=100):
     response = searcher.execute()
     output = format_courses_output(response)
     return output
-
 
 def get_courses_by_datetime(datetime_str, span_str=None, size=200):
     span_minutes = 0

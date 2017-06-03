@@ -147,6 +147,31 @@ def get_semester_from_date(date):
     return semester + ' ' + str(date.year)
 
 
+##
+## @brief      Limits the length of string arguments
+##
+def word_limit(f):
+    limit = 100
+
+    def g(*args, **kwargs):
+        new_args = []
+        new_kwargs = {}
+        for i in range(len(args)):
+            arg = args[i]
+            if type(arg) == str and len(arg) > limit:
+                new_args.append(arg[0:limit])
+            else:
+                new_args.append(arg)
+        for key in kwargs:
+            arg = kwargs[key]
+            if type(arg) == str and len(arg) > limit:
+                new_kwargs[key] = arg[0:limit]
+            else:
+                new_kwargs[key] = arg
+        return f(*new_args, **new_kwargs)
+    return g
+
+
 class _Tests():
     @staticmethod
     def test_parse_time():
