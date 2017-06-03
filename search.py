@@ -174,14 +174,15 @@ class CourseSearcher(Searcher):
             date_time = raw_query['datetime'][0].to('America/New_York')
             day = date_time.isoweekday() % 7
             time = date_time.time().strftime("%I:%M%p")
-            # HERE
+            delta_time = datetime.timedelta(minutes=raw_query['span'][0])
+            shifted_time = (date_time + delta_time).time().strftime("%I:%M%p")
 
             # NOTE: Known bug: if the time spans across two days, it would
             # give a wrong result because day is calculated based 
             # on the begin time
 
             # Construct the query based on day and time
-            _times_begin_query = {'lte': time, 'format': 'hh:mma'}
+            _times_begin_query = {'lte': shifted_time, 'format': 'hh:mma'}
             _times_end_query = {'gt': time, 'format': 'hh:mma'}
 
             lec_time_query = Q('bool', must=[Q('match', lectures__times__days=day),
@@ -339,7 +340,24 @@ def get_courses_by_building_room(building, room, index=None, size=100):
     return output
 
 
-def get_courses_by_datetime(datetime_str, span_minutes=0, size=200):
+def get_courses_by_datetime(datetime_str, span_str=None, size=200):
+    span_minutes = 0
+    if span_str is not None:
+        try:
+            span_minutes = int(span_str)
+            if not (config.SPAN_LOWER_LIMIT <= span_minutes <=
+                    config.SPAN_HIGHER_LIMIT):
+                raise(Exception(Message.SPAN_PARSE_FAIL))
+        except:
+            output = init_courses_output()
+            output['response'] = {
+                'status': 400,
+                'error': {
+                    'message': Message.SPAN_PARSE_FAIL
+                }
+            }
+            return output
+
     try:
         date_time = arrow.get(datetime_str)
     except:
@@ -351,6 +369,7 @@ def get_courses_by_datetime(datetime_str, span_minutes=0, size=200):
             }
         }
         return output
+
     index = utils.get_course_index_from_date(date_time.datetime)
     searcher = CourseSearcher(
         {'datetime': [date_time],

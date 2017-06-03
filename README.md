@@ -38,8 +38,8 @@ course/v1/
 - [x]	/datetime/:datetime
 		# current happening classes at given time
 		:datetime: in ISO 8601 format
-- [ ]	/datetime/:datetime/span/:span
-		# gets courses that happens within a span of time
+- [x]	/datetime/:datetime/span/:span
+		# gets courses that start/happen within a span of time
 		:span: The time span, in minutes, no more than 120 minutes
 - [x]	/building/:building/term/:term
 		:building: DH

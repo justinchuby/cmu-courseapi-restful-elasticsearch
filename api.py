@@ -192,10 +192,15 @@ class BuildingRoomByTerm(Resource):
 
 
 class Datetime(Resource):
-    def get(self, date_time_str):
-        result = search.get_courses_by_datetime(date_time_str, size=500)
+    def get(self, datetime_str):
+        result = search.get_courses_by_datetime(datetime_str, size=500)
         return format_response(result)
 
+
+class DatetimeSpan(Resource):
+    def get(self, datetime_str, span_str):
+        result = search.get_courses_by_datetime(datetime_str, span_str, size=500)
+        return format_response(result)
 
 ##
 ## Endpoint definitions
@@ -221,7 +226,8 @@ api.add_resource(RoomByTerm, BASE_URL + '/room/<room>/' + TERM_ENDPOINT)
 api.add_resource(BuildingRoom, BASE_URL + '/building/<building>/room/<room>/')
 api.add_resource(BuildingRoomByTerm, BASE_URL + '/building/<building>/room/<room>/' + TERM_ENDPOINT)
 # datetime/:datetime
-api.add_resource(Datetime, BASE_URL + '/datetime/<date_time_str>/')
+api.add_resource(Datetime, BASE_URL + '/datetime/<datetime_str>/')
+api.add_resource(DatetimeSpan, BASE_URL + '/datetime/<datetime_str>/span/<span_str>')
 
 
 if __name__ == '__main__':
