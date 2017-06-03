@@ -37,7 +37,7 @@ GET https://api.cmucoursefind.xyz/course/v1/course/21-259/
 Response format:
 ```json
 {
-	"course": <ScottyLabs Course Object>
+    "course": <ScottyLabs Course Object>
 }
 ```
 
@@ -139,7 +139,7 @@ GET https://api.cmucoursefind.xyz/course/v1/instructor/david%20kosbie/
 Response format:
 ```json
 {
-	"courses": [<ScottyLabs Course Object>]
+    "courses": [<ScottyLabs Course Object>]
 }
 ```
 Notice the courses are now under `courses` and not `course` and are stores in
