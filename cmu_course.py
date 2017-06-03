@@ -86,8 +86,8 @@ class TimeObj(object):
         time = date_time.time()
         day = date_time.isoweekday() % 7  # integer
         if self.isHappeningOn(day) and (self.begin <= time < self.end):
-            return true
-        return false
+            return True
+        return False
 
     def isHappeningOn(self, day):
         return (day in self.days)
