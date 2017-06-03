@@ -128,7 +128,7 @@ Sample response:
 
 
 ### GET `/instructor/:name`
-Courses taught by the instructor with <name>. An optional parameter `fuzzy` can
+Courses taught by the instructor with `name`. An optional parameter `fuzzy` can
 be added.
 
 Sample Request:
