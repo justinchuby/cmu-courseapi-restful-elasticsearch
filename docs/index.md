@@ -17,6 +17,8 @@ client.
 [https://api.cmucoursefind.xyz/course/v1/instructor/kosbie/](https://api.cmucoursefind.xyz/course/v1/instructor/kosbie/) gives you courses
 professor Kosbie teaches.
 
+To explore the api, you can also go to [https://app.swaggerhub.com/apis/justinchuby/course-api/v1](https://app.swaggerhub.com/apis/justinchuby/course-api/v1) and try it out.
+
 
 ## Api Endpoint, Version 1
 
