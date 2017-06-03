@@ -6,10 +6,16 @@ from config import BASE_URL
 from components import Message
 import search
 import utils
-
+# Raygun
+if config.RAYGUN_APIKEY is not None:
+    from raygun4py.middleware import flask
 
 app = Flask(__name__)
 api = Api(app)
+
+# Raygun
+if config.RAYGUN_APIKEY is not None:
+    flask.Provider(app, config.RAYGUN_SECRET).attach()
 
 ##
 ## Startup script
