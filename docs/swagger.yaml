@@ -226,9 +226,13 @@ definitions:
         type: string
         example: "Vectors, lines, planes, quadratic surfaces, polar, cylindrical and spherical coordinates, partial derivatives, directional derivatives, gradient, divergence, curl, chain rule, maximum-minimum problems, multiple integrals, parametric surfaces and curves, line integrals, surface integrals, Green-Gauss theorems. 3 hrs. lec., 1 hr. rec."
       lectures:
-        $ref: '#/definitions/Meeting'
+          type: array
+          items:
+              $ref: '#/definitions/Meeting'
       sections:
-        $ref: '#/definitions/Meeting'
+          type: array
+          items:
+              $ref: '#/definitions/Meeting'
       semester:
         type: string
         example: Fall 2016
@@ -249,13 +253,17 @@ definitions:
     - times
     properties:
       instructors:
-        type: string
+        type: array
+        items:
+          type: string
         example: ['Flaherty, Timothy']
       name:
         type: string
         example: Lec 1
       times:
-        $ref: '#/definitions/TimeObj'
+        type: array
+        items:
+          $ref: '#/definitions/TimeObj'
 
   TimeObj:
     type: object
@@ -268,7 +276,9 @@ definitions:
     - room
     properties:
       days:
-        type: integer
+        type: array
+        items:
+          type: integer
         example: [1, 3, 5]
       begin:
         type: string
@@ -298,9 +308,11 @@ definitions:
         type: boolean
         example: false
       reqs_list:
-        type: string
+        type: array
+        items:
+          type: string
         example: ["21-122"]
-        
+
   ErrorMessage:
     type: object
     properties:
