@@ -22,7 +22,7 @@ paths:
       tags:
       - course
       summary: Course info by course number
-      # operationId: findPetsByStatus
+      operationId: findCourseByCourseId
       produces:
       - application/json
       parameters:
@@ -50,7 +50,7 @@ paths:
       tags:
       - course
       summary: Course info by course number in a term
-      # operationId: findPetsByStatus
+      operationId: findCourseByCourseIdAndTerm
       produces:
       - application/json
       parameters:
@@ -83,6 +83,7 @@ paths:
       tags:
       - course
       summary: Course info by instructor
+      operationId: findCoursesByInstructor
       produces:
       - application/json
       parameters:
@@ -109,6 +110,7 @@ paths:
       tags:
       - course
       summary: Course info by instructor
+      operationId: findCoursesByInstructorAndTerm
       produces:
       - application/json
       parameters:
@@ -140,6 +142,7 @@ paths:
       tags:
       - course
       summary: Classes happening at given time.
+      operationId: findCoursesByDatetime
       produces:
       - application/json
       parameters:
@@ -162,6 +165,7 @@ paths:
       tags:
       - course
       summary: Courses that start/happen within a span of time, starting from datetime
+      operationId: findCoursesByDatetimeAndSpan
       produces:
       - application/json
       parameters:
@@ -189,6 +193,7 @@ paths:
       tags:
       - course
       summary: Courses in a building
+      operationId: findCoursesByBuildingAndTerm
       produces:
       - application/json
       parameters:
@@ -217,6 +222,7 @@ paths:
       tags:
       - course
       summary: Courses in a room
+      operationId: findCoursesByRoomAndTerm
       produces:
       - application/json
       parameters:
@@ -244,6 +250,7 @@ paths:
       tags:
       - course
       summary: Courses in building, room
+      operationId: findCoursesByBuildingAndRoom
       produces:
       - application/json
       parameters:
