@@ -12,7 +12,8 @@ To set up the Elasticsearch server, follow steps on https://medium.com/@happymac
 You may find the implemented endpoint in the `Api Endpoint` section.
 
 ### Try it out
-You can try it out by running `python3 api.py` and go to http://localhost:5000/course/v1/course/15-112/ or http://localhost:5000/course/v1/instructor/kosbie/term/f16.
+
+https://swaggerhub.com/apis/justinchuby/course-api/v1.
 
 ## Requirements
 
