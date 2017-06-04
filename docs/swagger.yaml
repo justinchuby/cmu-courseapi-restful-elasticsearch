@@ -42,7 +42,6 @@ paths:
         404:
           description: Course not found
           schema:
-            type: object
             $ref: '#/definitions/ErrorMessage'
 
   /course/{courseId}/term/{term}/:
@@ -75,7 +74,6 @@ paths:
         404:
           description: Course not found
           schema:
-            type: object
             $ref: '#/definitions/ErrorMessage'
 
   /instructor/{name}/:
