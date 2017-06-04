@@ -1,14 +1,11 @@
 swagger: '2.0'
 info:
   description: |
+    The Course API by ScottyLabs online.
+
     ScottyLabs offers the Course API that provides information about CMU courses.
     The documentation can be found [here](https://github.com/ScottyLabs/course-api).
-    
-    This online version of the course-api is built with Flask and Elasticsearch.
-    The Flask server serves as a gateway between the client and the Elasticsearch
-    server (and potentially other databases). It translates requests into
-    Elasticsearch queries and returns scottylabs format course information to the
-    client.
+    This is its RESTful version.
   version: "v1"
   title: Course API Online
 
@@ -160,7 +157,7 @@ paths:
             items:
               $ref: '#/definitions/Course'
 
-  /datetime/{datetime}/span/{span}:
+  /datetime/{datetime}/span/{span}/:
     get:
       tags:
       - course
@@ -179,6 +176,87 @@ paths:
         description: Time span, in minutes, no more than 120 minutes.
         required: true
         type: integer
+      responses:
+        200:
+          description: successful operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Course'
+
+  /building/{building}/term/{term}/:
+    get:
+      tags:
+      - course
+      summary: Courses in a building
+      produces:
+      - application/json
+      parameters:
+      - name: building
+        in: path
+        description: the abbreviation of the building, for example, DH for Doherty
+          Hall, GHC for Gates and Hillman Centers. The legend can be found on 
+          [http://www.cmu.edu/hub/legend.html](http://www.cmu.edu/hub/legend.html)
+        required: true
+        type: string
+      - name: term
+        in: path
+        description: "Term, e.g. f17 for Fall 2017"
+        required: true
+        type: string
+      responses:
+        200:
+          description: successful operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Course'
+
+  /room/{room}/term/{term}/:
+    get:
+      tags:
+      - course
+      summary: Courses in a room
+      produces:
+      - application/json
+      parameters:
+      - name: room
+        in: path
+        description: You can also get courses by the room number without know 
+          which building it is in. This is handy when you just have the room number.
+        required: true
+        type: string
+      - name: term
+        in: path
+        description: "Term, e.g. f17 for Fall 2017"
+        required: true
+        type: string
+      responses:
+        200:
+          description: successful operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Course'
+
+  /building/{building}/room/{room}/:
+    get:
+      tags:
+      - course
+      summary: Courses in building, room
+      produces:
+      - application/json
+      parameters:
+      - name: building
+        in: path
+        description: Building
+        required: true
+        type: string
+      - name: room
+        in: path
+        description: Room
+        required: true
+        type: string
       responses:
         200:
           description: successful operation
