@@ -406,5 +406,8 @@ definitions:
         example: 404
       error:
         type: object
+        properties:
+          message:
+            type: string
         example:
           message: Error Message
