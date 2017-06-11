@@ -41,12 +41,12 @@ def format_response(search_result):
 
 class FCEByID(Resource):
     def get(self, courseid):
-        result = search.get_fce_by_id(courseid)
+        result = search.get_fce_by_id(courseid, size=300)
         return format_response(result)
 
 
 class FCEByInstructor(Resource):
     @utils.word_limit
     def get(self, instructor):
-        result = search.get_fce_by_instructor(instructor)
+        result = search.get_fce_by_instructor(instructor, size=300)
         return format_response(result)

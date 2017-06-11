@@ -421,15 +421,19 @@ def get_courses_by_datetime(datetime_str, span_str=None, size=200):
     return output
 
 
-def get_fce_by_id(courseid):
-    searcher = FCESearcher({'courseid': [courseid]}, index = ES_FCE_INDEX)
+def get_fce_by_id(courseid, size=100):
+    searcher = FCESearcher({'courseid': [courseid]},
+                           index = ES_FCE_INDEX,
+                           size = size)
     response = searcher.execute()
     output = format_fces_output(response)
     return output
 
 
-def get_fce_by_instructor(instructor):
-    searcher = FCESearcher({'instructor': [instructor]}, index = ES_FCE_INDEX)
+def get_fce_by_instructor(instructor, size=100):
+    searcher = FCESearcher({'instructor': [instructor]}, 
+                           index = ES_FCE_INDEX,
+                           size = size)
     response = searcher.execute()
     output = format_fces_output(response)
     return output
