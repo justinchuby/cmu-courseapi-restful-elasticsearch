@@ -1,5 +1,6 @@
 from flask import Flask, request
 from flask_restful import Resource, reqparse
+from flask_restful.utils import cors
 from common import Message, search, utils
 
 
@@ -8,11 +9,13 @@ from common import Message, search, utils
 ##
 
 class HomeHome(Resource):
+    @cors.crossdomain(origin='*')
     def get(self):
         return {'message': Message.HOME_MESSAGE}
 
 
 class CourseapiHome(Resource):
+    @cors.crossdomain(origin='*')
     def get(self):
         return {'message': Message.API_ROOT_MESSAGE}
 
@@ -95,16 +98,19 @@ def get_course_detail(courseid, index):
 
 
 class CourseDetail(Resource):
+    @cors.crossdomain(origin='*')
     def get(self, courseid):
         return get_course_detail(courseid, None)
 
 
 class CourseDetailByTerm(Resource):
+    @cors.crossdomain(origin='*')
     def get(self, courseid, term):
         return get_course_detail(courseid, term)
 
 
 class Instructor(Resource):
+    @cors.crossdomain(origin='*')
     @utils.word_limit
     def get(self, name):
         args = request.args
@@ -119,6 +125,7 @@ class InstructorByTerm(Resource):
     fuzzy_parser = reqparse.RequestParser()
     fuzzy_parser.add_argument('fuzzy')
 
+    @cors.crossdomain(origin='*')
     @utils.word_limit
     def get(self, name, term):
         args = request.args
@@ -130,13 +137,8 @@ class InstructorByTerm(Resource):
         return format_response(result)
 
 
-# class Building(Resource):
-#     def get(self, building):
-#         result = search.get_courses_by_building_room(building, None)
-#         return format_response(result)
-
-
 class BuildingByTerm(Resource):
+    @cors.crossdomain(origin='*')
     @utils.word_limit
     def get(self, building, term):
         result = search.get_courses_by_building_room(building, None,
@@ -144,13 +146,8 @@ class BuildingByTerm(Resource):
         return format_response(result)
 
 
-# class Room(Resource):
-#     def get(self, room):
-#         result = search.get_courses_by_building_room(None, room)
-#         return format_response(result)
-
-
 class RoomByTerm(Resource):
+    @cors.crossdomain(origin='*')
     @utils.word_limit
     def get(self, room, term):
         result = search.get_courses_by_building_room(None, room,
@@ -159,6 +156,7 @@ class RoomByTerm(Resource):
 
 
 class BuildingRoom(Resource):
+    @cors.crossdomain(origin='*')
     @utils.word_limit
     def get(self, building, room):
         result = search.get_courses_by_building_room(building, room, size=500)
@@ -166,6 +164,7 @@ class BuildingRoom(Resource):
 
 
 class BuildingRoomByTerm(Resource):
+    @cors.crossdomain(origin='*')
     @utils.word_limit
     def get(self, building, room, term):
         result = search.get_courses_by_building_room(building, room,
@@ -174,6 +173,7 @@ class BuildingRoomByTerm(Resource):
 
 
 class Datetime(Resource):
+    @cors.crossdomain(origin='*')
     @utils.word_limit
     def get(self, datetime_str):
         result = search.get_courses_by_datetime(datetime_str, size=500)
@@ -181,6 +181,7 @@ class Datetime(Resource):
 
 
 class DatetimeSpan(Resource):
+    @cors.crossdomain(origin='*')
     @utils.word_limit
     def get(self, datetime_str, span_str):
         result = search.get_courses_by_datetime(datetime_str, span_str, size=500)

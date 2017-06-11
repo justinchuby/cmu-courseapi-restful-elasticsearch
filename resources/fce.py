@@ -1,5 +1,6 @@
 from flask import Flask, request
 from flask_restful import Resource, reqparse
+from flask_restful.utils import cors
 from common import Message, search, utils
 
 
@@ -40,12 +41,14 @@ def format_response(search_result):
 
 
 class FCEByID(Resource):
+    @cors.crossdomain(origin='*')
     def get(self, courseid):
         result = search.get_fce_by_id(courseid, size=300)
         return format_response(result)
 
 
 class FCEByInstructor(Resource):
+    @cors.crossdomain(origin='*')
     @utils.word_limit
     def get(self, instructor):
         result = search.get_fce_by_instructor(instructor, size=300)
