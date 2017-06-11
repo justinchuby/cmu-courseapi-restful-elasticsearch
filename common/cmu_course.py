@@ -4,7 +4,7 @@
 
 
 import copy
-from utils import *
+from common.utils import *
 
 
 class Course(object):

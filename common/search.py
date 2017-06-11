@@ -13,8 +13,7 @@ import certifi
 
 import config
 from config import ES_HOSTS, ES_HTTP_AUTH, ES_COURSE_INDEX_PREFIX
-from components import Message
-import utils
+from common import Message, utils
 
 
 # Adjust the index for courses. For example, f17 -> course-f17
