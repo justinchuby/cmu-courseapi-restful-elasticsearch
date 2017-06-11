@@ -63,7 +63,7 @@ api.add_resource(resources.course.BuildingRoomByTerm, COURSE_BASE_URL + '/buildi
 api.add_resource(resources.course.Datetime, COURSE_BASE_URL + '/datetime/<datetime_str>/')
 api.add_resource(resources.course.DatetimeSpan, COURSE_BASE_URL + '/datetime/<datetime_str>/timespan/<span_str>/')
 
-api.add_resource(resources.fce.FCEByID, FCE_BASE_URL + '/id/<courseid>/')
+api.add_resource(resources.fce.FCEByID, FCE_BASE_URL + '/courseid/<courseid>/')
 api.add_resource(resources.fce.FCEByInstructor, FCE_BASE_URL + '/instructor/<instructor>/')
 
 

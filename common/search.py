@@ -103,7 +103,6 @@ class FCESearcher(Searcher):
 
         if 'courseid' in raw_query:
             courseid = raw_query['courseid'][0]
-            # TODO: change courseid below to id 
             query &= Q('term', courseid=courseid)
 
         if 'instructor' in raw_query:
