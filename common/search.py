@@ -11,20 +11,10 @@ from elasticsearch_dsl.query import Q
 from elasticsearch_dsl.connections import connections
 import certifi
 
-import config
-from config.es_config import ES_HOSTS, ES_HTTP_AUTH, ES_COURSE_INDEX_PREFIX
 from common import Message, utils
-
-
-# Adjust the index for courses. For example, f17 -> course-f17
-# def adjust_course_index(index):
-#     try:
-#         if re.match('^(f|s|m1|m2)\d{2}$', index):
-#             return ES_COURSE_INDEX_PREFIX + index
-#     except:
-#         pass
-#     return index
-
+import config
+from config.es_config import ES_HOSTS, ES_HTTP_AUTH, \
+    ES_COURSE_INDEX_PREFIX, ES_FCE_INDEX
 
 
 ##
@@ -112,9 +102,13 @@ class FCESearcher(Searcher):
         query = Q()
 
         if 'courseid' in raw_query:
-            pass
+            courseid = raw_query['courseid'][0]
+            # TODO: change courseid below to id 
+            query &= Q('term', courseid=courseid)
+
         if 'instructor' in raw_query:
-            pass
+            instructor = raw_query['instructor'][0]
+            query &= Q('match', instructor={'query': instructor, 'operator': 'and'})
 
         if config.settings.DEBUG:
             print(json.dumps(query.to_dict(), indent=2))
@@ -152,7 +146,6 @@ class CourseSearcher(Searcher):
 
         if 'courseid' in raw_query:
             courseid = raw_query['courseid'][0]
-            print(self.index)
             if self.index is None:
                 current_semester = utils.get_semester_from_date(
                     datetime.datetime.today())
@@ -292,6 +285,24 @@ def format_courses_output(response):
     return output
 
 
+def init_fces_output():
+    output = {'response': {},
+              'fces': []}
+    return output
+
+
+def format_fces_output(response):
+    output = init_fces_output()
+    output['response'] = response_to_dict(response)
+
+    if has_error(response):
+        return output
+    for hit in response:
+        output['fces'].append(hit.to_dict())
+
+    return output
+
+
 def has_error(response):
     if isinstance(response, dict) and response.get('status') is not None:
         return True
@@ -411,16 +422,18 @@ def get_courses_by_datetime(datetime_str, span_str=None, size=200):
     return output
 
 
-# def filterWithInnerHits(events, innerhits_hits_hits):
-#     names = [hit['_source']['name'] for hit in innerhits_hits_hits]
-#     names = set(names)
-#     # print(innerhits_hits_hits)
-#     filteredEvents = []
-#     for event in events:
-#         # print(event.lecsec)
-#         if event.lecsec in names:
-#             filteredEvents.append(event)
-#     return filteredEvents
+def get_fce_by_id(courseid):
+    searcher = FCESearcher({'courseid': [courseid]}, index = ES_FCE_INDEX)
+    response = searcher.execute()
+    output = format_fces_output(response)
+    return output
+
+
+def get_fce_by_instructor(instructor):
+    searcher = FCESearcher({'instructor': [instructor]}, index = ES_FCE_INDEX)
+    response = searcher.execute()
+    output = format_fces_output(response)
+    return output
 
 
 if __name__ == '__main__':
