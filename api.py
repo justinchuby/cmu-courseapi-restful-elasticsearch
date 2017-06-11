@@ -1,5 +1,6 @@
 from flask import Flask, request
 from flask_restful import Resource, Api, reqparse
+from flask_cors import CORS
 from werkzeug.routing import BaseConverter
 
 import config.settings as settings
@@ -13,6 +14,7 @@ if settings.RAYGUN_APIKEY is not None:
     from raygun4py.middleware import flask
 
 app = Flask(__name__)
+CORS(app)
 api = Api(app, catch_all_404s=True)
 
 # Raygun
