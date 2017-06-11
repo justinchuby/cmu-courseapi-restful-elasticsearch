@@ -2,7 +2,7 @@ import re
 import datetime
 import string
 import copy
-from config import ES_COURSE_INDEX_PREFIX
+from config.course import ES_COURSE_INDEX_PREFIX
 
 
 def formatErrMsg(e, header=""):

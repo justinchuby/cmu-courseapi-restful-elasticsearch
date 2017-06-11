@@ -12,7 +12,7 @@ from elasticsearch_dsl.connections import connections
 import certifi
 
 import config
-from config import ES_HOSTS, ES_HTTP_AUTH, ES_COURSE_INDEX_PREFIX
+from config.es_config import ES_HOSTS, ES_HTTP_AUTH, ES_COURSE_INDEX_PREFIX
 from common import Message, utils
 
 
@@ -230,7 +230,7 @@ class CourseSearcher(Searcher):
                                )
         query &= Q('bool', must=[combined_lec_query | combined_sec_query])
 
-        if config.DEBUG:
+        if config.settings.DEBUG:
             print(json.dumps(query.to_dict(), indent=2))
             print("[DEBUG] max size: {}".format(self.size))
         return query
@@ -272,7 +272,7 @@ def response_to_dict(response):
     if isinstance(response, dict):
         return response
     else:
-        if config.DEBUG:
+        if config.settings.DEBUG:
             print("[DEBUG] hits count: {}".format(response.hits.total))
         return response.to_dict()
 
@@ -345,8 +345,8 @@ def get_courses_by_datetime(datetime_str, span_str=None, size=200):
     if span_str is not None:
         try:
             span_minutes = int(span_str)
-            if not (config.SPAN_LOWER_LIMIT <= span_minutes <=
-                    config.SPAN_UPPER_LIMIT):
+            if not (config.course.SPAN_LOWER_LIMIT <= span_minutes <=
+                    config.course.SPAN_UPPER_LIMIT):
                 raise(Exception(Message.SPAN_PARSE_FAIL))
         except:
             output = init_courses_output()
@@ -394,5 +394,5 @@ def get_courses_by_datetime(datetime_str, span_str=None, size=200):
 
 
 if __name__ == '__main__':
-    config.DEBUG = True
+    config.settings.DEBUG = True
     init_es_connection()
