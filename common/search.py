@@ -24,17 +24,21 @@ class Searcher(object):
     _doc_type = None
     _default_size = 5
 
-    ##
+    #
     # @brief      init
-    ##
-    # @param      self
-    # @param      s           The query text
-    ##
-    def __init__(self, raw_query, index=None, size=_default_size):
+    #
+    # @param      self       The object
+    # @param      raw_query  The raw query
+    # @param      index      The index
+    # @param      size       The size
+    # @param      sort       sort is either None or a list
+    #
+    def __init__(self, raw_query, index=None, size=_default_size, sort=None):
         self.raw_query = copy.deepcopy(raw_query)
         self.index = index
         self.size = size
         self.doc_type = self._doc_type
+        self.sort = sort
 
     def __repr__(self):
         return "<Searcher Object: raw_query={}>".format(repr(self.raw_query))
@@ -51,12 +55,15 @@ class Searcher(object):
         # if index is None:
         #     index = ALL_COURSES_INDEX
         response = self.fetch(self.generate_query(), self.index,
-                              size=self.size, doc_type=self.doc_type)
+                              size=self.size, doc_type=self.doc_type,
+                              sort=self.sort)
         return response
 
     @staticmethod
-    def fetch(query, index, size=5, doc_type=None):
+    def fetch(query, index, size=5, doc_type=None, sort=None):
         s = Search(index=index, doc_type=doc_type).query(query)
+        if sort:
+            s.sort(*sort)
         s.size = size
         try:
             response = s.execute()
@@ -86,8 +93,8 @@ class FCESearcher(Searcher):
     _doc_type = 'fce'
     _default_size = 5
 
-    def __init__(self, raw_query, index=None, size=_default_size):
-        super().__init__(raw_query, index, size)
+    def __init__(self, raw_query, index=None, size=_default_size, sort=None):
+        super().__init__(raw_query, index=index, size=size, sort=sort)
 
     @property
     def index(self):
@@ -424,7 +431,8 @@ def get_courses_by_datetime(datetime_str, span_str=None, size=200):
 def get_fce_by_id(courseid, size=100):
     searcher = FCESearcher({'courseid': [courseid]},
                            index = ES_FCE_INDEX,
-                           size = size)
+                           size = size,
+                           sort = ['-year'])
     response = searcher.execute()
     output = format_fces_output(response)
     return output
@@ -433,7 +441,8 @@ def get_fce_by_id(courseid, size=100):
 def get_fce_by_instructor(instructor, size=100):
     searcher = FCESearcher({'instructor': [instructor]}, 
                            index = ES_FCE_INDEX,
-                           size = size)
+                           size = size,
+                           sort = ['-year'])
     response = searcher.execute()
     output = format_fces_output(response)
     return output
