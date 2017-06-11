@@ -52,8 +52,6 @@ class Searcher(object):
         self._index = value
 
     def execute(self):
-        # if index is None:
-        #     index = ALL_COURSES_INDEX
         response = self.fetch(self.generate_query(), self.index,
                               size=self.size, doc_type=self.doc_type,
                               sort=self.sort)
@@ -61,10 +59,9 @@ class Searcher(object):
 
     @staticmethod
     def fetch(query, index, size=5, doc_type=None, sort=None):
-        s = Search(index=index, doc_type=doc_type).query(query)
+        s = Search(index=index, doc_type=doc_type).query(query).extra(size=size)
         if sort:
-            s.sort(*sort)
-        s.size = size
+            s = s.sort(*sort)
         try:
             response = s.execute()
         except elasticsearch.exceptions.NotFoundError as e:
@@ -430,19 +427,19 @@ def get_courses_by_datetime(datetime_str, span_str=None, size=200):
 
 def get_fce_by_id(courseid, size=100):
     searcher = FCESearcher({'courseid': [courseid]},
-                           index = ES_FCE_INDEX,
-                           size = size,
-                           sort = ['-year'])
+                           index=ES_FCE_INDEX,
+                           size=size,
+                           sort=['-year'])
     response = searcher.execute()
     output = format_fces_output(response)
     return output
 
 
 def get_fce_by_instructor(instructor, size=100):
-    searcher = FCESearcher({'instructor': [instructor]}, 
-                           index = ES_FCE_INDEX,
-                           size = size,
-                           sort = ['-year'])
+    searcher = FCESearcher({'instructor': [instructor]},
+                           index=ES_FCE_INDEX,
+                           size=size,
+                           sort=['-year'])
     response = searcher.execute()
     output = format_fces_output(response)
     return output
