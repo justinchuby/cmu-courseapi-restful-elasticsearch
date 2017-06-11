@@ -17,3 +17,4 @@ except Exception as err:
     print("Please set ES_HOSTS and ES_HTTP_AUTH correctly.")
 
 ES_COURSE_INDEX_PREFIX = 'course-'
+ES_FCE_INDEX = 'fce'

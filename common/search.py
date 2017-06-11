@@ -92,6 +92,36 @@ class Searcher(object):
         return query
 
 
+class FCESearcher(Searcher):
+    _doc_type = 'fce'
+    _default_size = 5
+
+    def __init__(self, raw_query, index=None, size=_default_size):
+        super().__init__(raw_query, index, size)
+
+    @property
+    def index(self):
+        return self._index
+
+    @index.setter
+    def index(self, value):
+        self._index = value
+
+    def generate_query(self):
+        raw_query = self.raw_query
+        query = Q()
+
+        if 'courseid' in raw_query:
+            pass
+        if 'instructor' in raw_query:
+            pass
+
+        if config.settings.DEBUG:
+            print(json.dumps(query.to_dict(), indent=2))
+            print("[DEBUG] max size: {}, index: {}".format(self.size, self.index))
+        return query
+
+
 class CourseSearcher(Searcher):
     _doc_type = 'course'
     _default_size = 5
@@ -99,12 +129,12 @@ class CourseSearcher(Searcher):
     def __init__(self, raw_query, index=None, size=_default_size):
         super().__init__(raw_query, index, size)
 
-    # @brief      Sets the index from short representation of a term. e.g. f17
-    #               To the ES index
     @property
     def index(self):
         return self._index
 
+    # @brief      Sets the index from short representation of a term. e.g. f17
+    #               To the ES index
     @index.setter
     def index(self, value):
         if value is None:
