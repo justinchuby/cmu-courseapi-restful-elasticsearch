@@ -162,10 +162,10 @@ GET https://api.cmucoursefind.xyz/course/v1/datetime/2017-06-01T17:00:00.000000-
 ```
 
 
-### GET `/datetime/:datetime/span/:span`
+### GET `/datetime/:datetime/timespan/:timespan`
 Courses that start/happen within a span of time, starting from `datetime`.
 
-`span` is the time span, in minutes, no more than 120 minutes.
+`timespan` is the time span, in minutes, no more than 120 minutes.
 
 
 ### GET `/building/:building/term/:term`
