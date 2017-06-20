@@ -425,6 +425,28 @@ def get_courses_by_datetime(datetime_str, span_str=None, size=200):
     return output
 
 
+def get_courses_by_searching(args, size=100):
+    # valid_args = ('text', 'name', 'description', 'instructor', 'id', 'building',
+    #               'room', 'datetime', 'timespan', 'term')
+    raw_query = {}
+    if 'text' in args:
+        raw_query['text'] = [args['text']]
+    else:
+        if 'name' in args:
+            raw_query['text'] = [args['text']]
+            # TODO: fix here
+        if 'description' in args:
+            raw_query['description'] = [args['description']]
+    if 'instructor' in args:
+        raw_query['instructor'] = [args['instructor']]
+    if 'id' in args:
+        raw_query['id'] = args['query']
+    # if 'building' in args:
+    #     raw_query['building'] = args['building']
+
+    raw_query = dict()
+
+
 def get_fce_by_id(courseid, size=100):
     searcher = FCESearcher({'courseid': [courseid]},
                            index=ES_FCE_INDEX,
@@ -443,6 +465,9 @@ def get_fce_by_instructor(instructor, size=100):
     response = searcher.execute()
     output = format_fces_output(response)
     return output
+
+
+
 
 
 if __name__ == '__main__':

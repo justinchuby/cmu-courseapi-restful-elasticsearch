@@ -1,6 +1,5 @@
 from flask import Flask, request
-from flask_restful import Resource, reqparse
-from flask_restful.utils import cors
+from flask_restful import Resource
 from common import Message, search, utils
 
 
@@ -117,9 +116,6 @@ class Instructor(Resource):
 
 
 class InstructorByTerm(Resource):
-    fuzzy_parser = reqparse.RequestParser()
-    fuzzy_parser.add_argument('fuzzy')
-
     @utils.word_limit
     def get(self, name, term):
         args = request.args
@@ -173,4 +169,11 @@ class DatetimeSpan(Resource):
     @utils.word_limit
     def get(self, datetime_str, span_str):
         result = search.get_courses_by_datetime(datetime_str, span_str, size=500)
+        return format_response(result)
+
+
+class Search(Resource):
+    def get(self):
+        args = request.args
+        result = search.get_courses_by_searching(args, size=500)
         return format_response(result)
