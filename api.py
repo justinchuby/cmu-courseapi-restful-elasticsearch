@@ -10,16 +10,23 @@ import resources.fce
 from config.fce import BASE_URL as FCE_BASE_URL
 from common import Message, search, utils
 # Raygun
-if settings.RAYGUN_APIKEY is not None:
-    from raygun4py.middleware import flask
+# if settings.RAYGUN_APIKEY is not None:
+#     from raygun4py.middleware import flask
+# Sentry
+if settings.SENTRY_DSN is not None:
+    from raven.contrib.flask import Sentry
 
 app = Flask(__name__)
 CORS(app)
 api = Api(app, catch_all_404s=True)
 
-# Raygun
-if settings.RAYGUN_APIKEY is not None:
-    flask.Provider(app, settings.RAYGUN_APIKEY).attach()
+# # Raygun
+# if settings.RAYGUN_APIKEY is not None:
+#     flask.Provider(app, settings.RAYGUN_APIKEY).attach()
+
+# Sentry
+sentry = Sentry(app)
+
 
 ##
 ## Startup script
