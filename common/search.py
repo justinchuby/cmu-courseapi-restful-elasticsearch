@@ -147,6 +147,30 @@ class CourseSearcher(Searcher):
         raw_query = self.raw_query
         query = Q()
 
+        if 'text' in raw_query:
+            text = raw_query['text'][0]
+            text_query = Q('bool',
+                           should=[
+                               Q('match', name=text),
+                               Q('match', desc=text)
+                           ]
+                           )
+            query &= text_query
+
+        else:
+            if 'name' in raw_query:
+                name = raw_query['name'][0]
+                name_query = Q('bool',
+                               must=Q('match', name=name)
+                               )
+                query &= name_query
+            if 'desc' in raw_query:
+                desc = raw_query['desc'][0]
+                desc_query = Q('bool',
+                               must=Q('match', desc=desc)
+                               )
+                query &= desc_query
+
         if 'courseid' in raw_query:
             courseid = raw_query['courseid'][0]
             if self.index is None:
@@ -154,13 +178,13 @@ class CourseSearcher(Searcher):
                     datetime.datetime.today())
                 id_query = Q('bool',
                              must=Q('term', id=courseid),
-                             should=Q('match', name=current_semester)
+                             should=Q('match', semester=current_semester)
                              )
             else:
                 id_query = Q('term', id=courseid)
             query &= id_query
 
-        # Declare the variables to store the tempory nested queries
+        # Declare the variables to store the temporary nested queries
         lec_nested_queries = {}
         sec_nested_queries = {}
         lec_name_query = Q()
@@ -200,7 +224,7 @@ class CourseSearcher(Searcher):
             date_time = raw_query['datetime'][0].to('America/New_York')
             day = date_time.isoweekday() % 7
             time = date_time.time().strftime("%I:%M%p")
-            delta_time = datetime.timedelta(minutes=raw_query['span'][0])
+            delta_time = datetime.timedelta(minutes=raw_query['timespan'][0])
             shifted_time = (date_time + delta_time).time().strftime("%I:%M%p")
 
             # NOTE: Known bug: if the time spans across two days, it would
@@ -417,7 +441,7 @@ def get_courses_by_datetime(datetime_str, span_str=None, size=200):
     index = utils.get_course_index_from_date(date_time.datetime)
     searcher = CourseSearcher(
         {'datetime': [date_time],
-         'span': [span_minutes]},
+         'timespan': [span_minutes]},
         index=index, size=size
     )
     response = searcher.execute()
@@ -426,23 +450,64 @@ def get_courses_by_datetime(datetime_str, span_str=None, size=200):
 
 
 def get_courses_by_searching(args, size=100):
-    # valid_args = ('text', 'name', 'description', 'instructor', 'id', 'building',
-    #               'room', 'datetime', 'timespan', 'term')
+    # valid_args = ('text', 'name', 'desc', 'instructor', 'courseid',
+    # 'building', 'room', 'datetime_str', 'span_str', 'term')
     raw_query = {}
     if 'text' in args:
         raw_query['text'] = [args['text']]
     else:
         if 'name' in args:
-            raw_query['text'] = [args['text']]
+            raw_query['name'] = [args['name']]
             # TODO: fix here
-        if 'description' in args:
-            raw_query['description'] = [args['description']]
+        if 'desc' in args:
+            raw_query['desc'] = [args['desc']]
     if 'instructor' in args:
         raw_query['instructor'] = [args['instructor']]
-    if 'id' in args:
-        raw_query['id'] = args['query']
-    # if 'building' in args:
-    #     raw_query['building'] = args['building']
+    if 'courseid' in args:
+        raw_query['courseid'] = [args['courseid']]
+    if 'building' in args:
+        raw_query['building'] = [args['building']]
+    if 'room' in args:
+        raw_query['room'] = [args['room']]
+    # if 'datetime_str' in args:
+    #     # Duplicated from get_courses_by_datetime()
+    #     # TODO: combine code
+    #     span_minutes = 0
+    #     datetime_str = args['datetime_str']
+    #     span_str = args.get('span_str')
+    #     if span_str is not None:
+    #         try:
+    #             span_minutes = int(span_str)
+    #             if not (config.course.SPAN_LOWER_LIMIT <= span_minutes <=
+    #                     config.course.SPAN_UPPER_LIMIT):
+    #                 raise(Exception(Message.SPAN_PARSE_FAIL))
+    #             raw_query['timespan'] = [span_minutes]
+    #         except:
+    #             output = init_courses_output()
+    #             output['response'] = {
+    #                 'status': 400,
+    #                 'error': {
+    #                     'message': Message.SPAN_PARSE_FAIL
+    #                 }
+    #             }
+    #             return output
+
+    #     try:
+    #         date_time = arrow.get(datetime_str)
+    #         raw_query['datetime'] = [date_time]
+    #     except:
+    #         output = init_courses_output()
+    #         output['response'] = {
+    #             'status': 400,
+    #             'error': {
+    #                 'message': Message.DATETIME_PARSE_FAIL
+    #             }
+    #         }
+    #         return output
+
+    #     index = utils.get_course_index_from_date(date_time.datetime)
+
+    searcher = CourseSearcher(raw_query, index=index, size=size)
 
     raw_query = dict()
 
