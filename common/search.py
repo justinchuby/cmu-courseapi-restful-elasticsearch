@@ -147,6 +147,9 @@ class CourseSearcher(Searcher):
         raw_query = self.raw_query
         query = Q()
 
+        # TODO: use the English analyser.
+        # TODO BUG: text and courseid presented in the same time would cause
+        # empty return value 
         if 'text' in raw_query:
             text = raw_query['text'][0]
             text_query = Q('bool',
@@ -452,6 +455,17 @@ def get_courses_by_datetime(datetime_str, span_str=None, size=200):
 def get_courses_by_searching(args, size=100):
     # valid_args = ('text', 'name', 'desc', 'instructor', 'courseid',
     # 'building', 'room', 'datetime_str', 'span_str', 'term')
+
+    if len(args) == 0:
+        output = init_courses_output()
+        output['response'] = {
+            'status': 400,
+            'error': {
+                'message': Message.EMPTY_SEARCH
+            }
+        }
+        return output
+
     raw_query = {}
     if 'text' in args:
         raw_query['text'] = [args['text']]
@@ -507,9 +521,10 @@ def get_courses_by_searching(args, size=100):
 
     #     index = utils.get_course_index_from_date(date_time.datetime)
 
-    searcher = CourseSearcher(raw_query, index=index, size=size)
-
-    raw_query = dict()
+    searcher = CourseSearcher(raw_query, index=None, size=size)
+    response = searcher.execute()
+    output = format_courses_output(response)
+    return output
 
 
 def get_fce_by_id(courseid, size=100):
