@@ -25,7 +25,8 @@ api = Api(app, catch_all_404s=True)
 #     flask.Provider(app, settings.RAYGUN_APIKEY).attach()
 
 # Sentry
-sentry = Sentry(app)
+if settings.SENTRY_DSN is not None:
+    sentry = Sentry(app)
 
 
 ##
