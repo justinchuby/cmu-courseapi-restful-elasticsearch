@@ -430,7 +430,12 @@ def get_courses_by_datetime(datetime_str, span_str=None, size=200):
             return output
 
     try:
-        date_time = arrow.get(datetime_str)
+        # Try to convert the input string into arrow datetime format
+        # if the string is 'now', then set time to current time
+        if datetime_str == 'now':
+            date_time = arrow.now()
+        else:
+            date_time = arrow.get(datetime_str)
     except:
         output = init_courses_output()
         output['response'] = {
