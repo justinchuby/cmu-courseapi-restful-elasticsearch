@@ -141,9 +141,9 @@ def get_semester_from_date(date):
     elif 3 <= mini <= 4:
         semester = "Spring"
     elif mini == 5:
-        semester = "Summer-1"
+        semester = "Summer One"
     else:
-        semester = "Summer-2"
+        semester = "Summer Two"
     return semester + ' ' + str(date.year)
 
 

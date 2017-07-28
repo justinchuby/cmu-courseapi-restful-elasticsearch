@@ -55,6 +55,9 @@ class Searcher(object):
         response = self.fetch(self.generate_query(), self.index,
                               size=self.size, doc_type=self.doc_type,
                               sort=self.sort)
+        # if config.settings.DEBUG:
+        #     print("[DEBUG] ES response:")
+        #     print(json.dumps(response.to_dict(), indent=2))
         return response
 
     @staticmethod
