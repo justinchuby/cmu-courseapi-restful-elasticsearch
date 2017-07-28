@@ -55,9 +55,9 @@ class Searcher(object):
         response = self.fetch(self.generate_query(), self.index,
                               size=self.size, doc_type=self.doc_type,
                               sort=self.sort)
-        # if config.settings.DEBUG:
-        #     print("[DEBUG] ES response:")
-        #     print(json.dumps(response.to_dict(), indent=2))
+        if config.settings.DEBUG:
+            print("[DEBUG] ES response:")
+            print(json.dumps(response.to_dict(), indent=2))
         return response
 
     @staticmethod
@@ -358,7 +358,7 @@ def response_to_dict(response):
 # @param      courseid  (str) The courseid
 # @param      term      (str) The elasticsearch index
 #
-# @return     A dictionary {courses: [<dictionary containing the course info>],
+# @return     A dictionary {course: [<dictionary containing the course info>],
 #             response: <response from the server> }
 #
 def get_course_by_id(courseid, term=None):
@@ -379,6 +379,16 @@ def get_course_by_id(courseid, term=None):
 
     return output
 
+
+def get_courses_by_id(courseid):
+    output = init_courses_output()
+
+    if re.search("^\d\d-\d\d\d$", courseid):
+        searcher = CourseSearcher({'courseid': [courseid]}, index=None)
+        response = searcher.execute()
+        output = format_courses_output(response)
+
+    return output
 
 #
 #

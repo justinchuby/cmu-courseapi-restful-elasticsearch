@@ -104,6 +104,12 @@ class CourseDetailByTerm(Resource):
         return get_course_detail(courseid, term)
 
 
+class CourseDetailAllTerms(Resource):
+    def get(self, courseid):
+        result = search.get_courses_by_id(courseid)
+        return format_response(result)
+
+
 class Instructor(Resource):
     @utils.word_limit
     def get(self, name):

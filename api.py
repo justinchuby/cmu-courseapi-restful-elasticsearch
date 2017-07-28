@@ -57,6 +57,9 @@ api.add_resource(resources.course.CourseapiHome, COURSE_BASE_URL + '/')
 # /course/:course-id
 api.add_resource(resources.course.CourseDetail, COURSE_BASE_URL + r'/course/<regex("\d{2}-\d{3}"):courseid>/')
 api.add_resource(resources.course.CourseDetailByTerm, COURSE_BASE_URL + r'/course/<regex("\d{2}-\d{3}"):courseid>/' + TERM_ENDPOINT)
+# /courseid/:course-id/
+api.add_resource(resources.course.CourseDetailAllTerms, COURSE_BASE_URL + r'/courseid/<regex("\d{2}-\d{3}"):courseid>/')
+
 # /instructor/:name
 api.add_resource(resources.course.Instructor, COURSE_BASE_URL + '/instructor/<name>/')
 api.add_resource(resources.course.InstructorByTerm, COURSE_BASE_URL + '/instructor/<name>/' + TERM_ENDPOINT)
@@ -77,6 +80,7 @@ api.add_resource(resources.course.Search, COURSE_BASE_URL + '/search/')
 
 api.add_resource(resources.fce.FCEByID, FCE_BASE_URL + '/courseid/<courseid>/')
 api.add_resource(resources.fce.FCEByInstructor, FCE_BASE_URL + '/instructor/<instructor>/')
+
 
 
 if __name__ == '__main__':
