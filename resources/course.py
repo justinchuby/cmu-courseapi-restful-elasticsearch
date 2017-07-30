@@ -17,7 +17,25 @@ class CourseapiHome(Resource):
         return {'message': Message.API_ROOT_MESSAGE}
 
 
-def format_response(search_result):
+def is_valid_field(field):
+    # Currently only desc is allowed to be filtered out
+    return field == 'desc'
+
+
+def parse_url_array(args, field):
+    if field in args:
+        return args[field].split(',')
+    return None
+
+
+def format_response(search_result, filtered_fields=None):
+    if filtered_fields:
+        for field in filtered_fields:
+            if is_valid_field(field):
+                # Assumed that courses field is always in the response
+                for course in search_result['courses']:
+                    course[field] = None
+
     # requires search_result to be a dictionary
     res = search_result.pop('response')
     code = 200
@@ -107,7 +125,8 @@ class CourseDetailByTerm(Resource):
 class CourseDetailAllTerms(Resource):
     def get(self, courseid):
         result = search.get_courses_by_id(courseid)
-        return format_response(result)
+        filtered_fields = parse_url_array(request.args, 'filtered_fields')
+        return format_response(result, filtered_fields)
 
 
 class Instructor(Resource):
@@ -118,7 +137,8 @@ class Instructor(Resource):
         if 'fuzzy' in args:
             fuzzy = True
         result = search.get_courses_by_instructor(name, fuzzy=fuzzy, size=1000)
-        return format_response(result)
+        filtered_fields = parse_url_array(request.args, 'filtered_fields')
+        return format_response(result, filtered_fields)
 
 
 class InstructorByTerm(Resource):
@@ -130,7 +150,8 @@ class InstructorByTerm(Resource):
             fuzzy = True
         result = search.get_courses_by_instructor(name, fuzzy=fuzzy,
                                                   index=term, size=500)
-        return format_response(result)
+        filtered_fields = parse_url_array(request.args, 'filtered_fields')
+        return format_response(result, filtered_fields)
 
 
 class BuildingByTerm(Resource):
@@ -138,7 +159,8 @@ class BuildingByTerm(Resource):
     def get(self, building, term):
         result = search.get_courses_by_building_room(building, None,
                                                      index=term, size=500)
-        return format_response(result)
+        filtered_fields = parse_url_array(request.args, 'filtered_fields')
+        return format_response(result, filtered_fields)
 
 
 class RoomByTerm(Resource):
@@ -146,14 +168,16 @@ class RoomByTerm(Resource):
     def get(self, room, term):
         result = search.get_courses_by_building_room(None, room,
                                                      index=term, size=500)
-        return format_response(result)
+        filtered_fields = parse_url_array(request.args, 'filtered_fields')
+        return format_response(result, filtered_fields)
 
 
 class BuildingRoom(Resource):
     @utils.word_limit
     def get(self, building, room):
         result = search.get_courses_by_building_room(building, room, size=500)
-        return format_response(result)
+        filtered_fields = parse_url_array(request.args, 'filtered_fields')
+        return format_response(result, filtered_fields)
 
 
 class BuildingRoomByTerm(Resource):
@@ -161,25 +185,29 @@ class BuildingRoomByTerm(Resource):
     def get(self, building, room, term):
         result = search.get_courses_by_building_room(building, room,
                                                      index=term, size=100)
-        return format_response(result)
+        filtered_fields = parse_url_array(request.args, 'filtered_fields')
+        return format_response(result, filtered_fields)
 
 
 class Datetime(Resource):
     @utils.word_limit
     def get(self, datetime_str):
         result = search.get_courses_by_datetime(datetime_str, size=500)
-        return format_response(result)
+        filtered_fields = parse_url_array(request.args, 'filtered_fields')
+        return format_response(result, filtered_fields)
 
 
 class DatetimeSpan(Resource):
     @utils.word_limit
     def get(self, datetime_str, span_str):
         result = search.get_courses_by_datetime(datetime_str, span_str, size=500)
-        return format_response(result)
+        filtered_fields = parse_url_array(request.args, 'filtered_fields')
+        return format_response(result, filtered_fields)
 
 
 class Search(Resource):
     def get(self):
         args = request.args
         result = search.get_courses_by_searching(args, size=500)
-        return format_response(result)
+        filtered_fields = parse_url_array(args, 'filtered_fields')
+        return format_response(result, filtered_fields)
