@@ -387,8 +387,11 @@ def get_courses_by_id(courseid):
         searcher = CourseSearcher({'courseid': [courseid]}, index=None)
         response = searcher.execute()
         output = format_courses_output(response)
+        if len(output['courses']) == 0:
+            output['response']['status'] = 404
 
     return output
+
 
 #
 #
