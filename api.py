@@ -78,9 +78,10 @@ api.add_resource(resources.course.DatetimeSpan, COURSE_BASE_URL + '/datetime/<da
 
 api.add_resource(resources.course.Search, COURSE_BASE_URL + '/search/')
 
+api.add_resource(resources.course.ListAllCoursesByTerm, COURSE_BASE_URL + '/list-all-courses/' + TERM_ENDPOINT)
+
 api.add_resource(resources.fce.FCEByID, FCE_BASE_URL + '/courseid/<courseid>/')
 api.add_resource(resources.fce.FCEByInstructor, FCE_BASE_URL + '/instructor/<instructor>/')
-
 
 
 if __name__ == '__main__':

@@ -211,3 +211,19 @@ class Search(Resource):
         result = search.get_courses_by_searching(args, size=500)
         filtered_fields = parse_url_array(args, 'filtered_fields')
         return format_response(result, filtered_fields)
+
+
+class ListAllCourses(Resource):
+    def get(self):
+        courseid_list = search.list_all_courses(None)
+        return {
+            'courseids': courseid_list
+        }
+
+
+class ListAllCoursesByTerm(Resource):
+    def get(self, term):
+        courseid_list = search.list_all_courses(term)
+        return {
+            'courseids': courseid_list
+        }

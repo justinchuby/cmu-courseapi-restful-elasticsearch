@@ -568,6 +568,27 @@ def get_fce_by_instructor(instructor, size=100):
     return output
 
 
+def list_all_courses(term):
+    if term == 'current':
+        index = utils.get_current_course_index()
+    else:
+        index = ES_COURSE_INDEX_PREFIX + term
+    print(index)
+    query = Q()
+    # Use ES api to search
+    s = Search(index=index).query(query).extra(
+            size=7000).source(False)
+
+    try:
+        response = s.execute().to_dict()
+        if "hits" in response:
+            for elem in response['hits']['hits']:
+                print(elem['_id'])
+            courseids = [elem['_id'] for elem in response['hits']['hits']]
+            return courseids
+    except:
+        pass
+    return []
 
 
 
