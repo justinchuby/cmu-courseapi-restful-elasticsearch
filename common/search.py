@@ -138,7 +138,7 @@ class CourseSearcher(Searcher):
     @index.setter
     def index(self, value):
         if value is None:
-            self._index = value
+            self._index = ES_COURSE_INDEX_PREFIX + '*'
         elif value == 'current':
             self._index = utils.get_current_course_index()
         elif re.match('^(f|s|m1|m2)\d{2}$', value):
