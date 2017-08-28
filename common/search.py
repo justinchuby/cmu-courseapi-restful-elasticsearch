@@ -138,12 +138,16 @@ class CourseSearcher(Searcher):
     @index.setter
     def index(self, value):
         if value is None:
+            # Everything
             self._index = ES_COURSE_INDEX_PREFIX + '*'
         elif value == 'current':
+            # Current semester
             self._index = utils.get_current_course_index()
         elif re.match('^(f|s|m1|m2)\d{2}$', value):
+            # Match a semester, e.g. f17 or m217
             self._index = ES_COURSE_INDEX_PREFIX + value
         else:
+            # Unknown index, use as is
             self._index = value
 
     def generate_query(self):
@@ -152,7 +156,7 @@ class CourseSearcher(Searcher):
 
         # TODO: use the English analyser.
         # TODO BUG: text and courseid presented in the same time would cause
-        # empty return value 
+        # empty return value
         if 'text' in raw_query:
             text = raw_query['text'][0]
             text_query = Q('bool',
@@ -234,7 +238,7 @@ class CourseSearcher(Searcher):
             shifted_time = (date_time + delta_time).time().strftime("%I:%M%p")
 
             # NOTE: Known bug: if the time spans across two days, it would
-            # give a wrong result because day is calculated based 
+            # give a wrong result because day is calculated based
             # on the begin time
 
             # Construct the query based on day and time
@@ -284,6 +288,7 @@ class CourseSearcher(Searcher):
                                path='sections',
                                inner_hits={}
                                )
+        # And finally combine the lecture query and section query with "or"
         query &= Q('bool', must=[combined_lec_query | combined_sec_query])
 
         if config.settings.DEBUG:
@@ -292,6 +297,8 @@ class CourseSearcher(Searcher):
         return query
 
 
+# @brief  Initializes connection to the Elasticsearch server
+#         The settings are in config/es_config.py
 def init_es_connection():
     connections.create_connection(hosts=ES_HOSTS,
                                   timeout=20,
@@ -300,12 +307,14 @@ def init_es_connection():
                                   http_auth=ES_HTTP_AUTH)
 
 
+# @brief  Initializes an output dictionary for "courses" endpoint
 def init_courses_output():
     output = {'response': {},
               'courses': []}
     return output
 
 
+# @brief  Formats the output for the courses endpoint
 def format_courses_output(response):
     output = init_courses_output()
     output['response'] = response_to_dict(response)
