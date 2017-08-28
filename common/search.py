@@ -550,12 +550,13 @@ def get_courses_by_searching(args, size=100):
     #         return output
 
     #     index = utils.get_course_index_from_date(date_time.datetime)
-    #     
+    #
+    index = None
     if 'term' in args:
         # TODO: this is a quick hack to support the term arg
         index = 'current'
 
-    searcher = CourseSearcher(raw_query, index=None, size=size)
+    searcher = CourseSearcher(raw_query, index=index, size=size)
     response = searcher.execute()
     output = format_courses_output(response)
     return output
