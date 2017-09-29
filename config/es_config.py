@@ -9,12 +9,28 @@ import ast
 
 # Comment the following for debugging,
 # or set corresponding environment variables
+
+# Set service type, AWS or default
+SERVICE = 'AWS'
+
+
+AWS_ACCESS_KEY = ''
+AWS_SECRET_KEY = ''
+AWS_REGION = ''
+ES_HTTP_AUTH = ''
+
 try:
-    ES_HOSTS = ast.literal_eval(os.environ['ES_HOSTS'])
-    ES_HTTP_AUTH = ast.literal_eval(os.environ['ES_HTTP_AUTH'])
+    if SERVICE == 'AWS':
+        AWS_ES_HOSTS = ast.literal_eval(os.environ['AWS_ES_HOSTS'])
+        AWS_ACCESS_KEY = ast.literal_eval(os.environ['AWS_ACCESS_KEY'])
+        AWS_SECRET_KEY = ast.literal_eval(os.environ['AWS_SECRET_KEY'])
+        AWS_REGION = ast.literal_eval(os.environ['AWS_REGION'])
+    else:
+        ES_HOSTS = ast.literal_eval(os.environ['ES_HOSTS'])
+        ES_HTTP_AUTH = ast.literal_eval(os.environ['ES_HTTP_AUTH'])
 except Exception as err:
     print(err)
-    print("Please set ES_HOSTS and ES_HTTP_AUTH correctly.")
+    print("Please configure ES service in es_config.py correctly.")
 
 ES_COURSE_INDEX_PREFIX = 'course-'
 ES_FCE_INDEX = 'fce'

@@ -13,8 +13,7 @@ import certifi
 
 from common import Message, utils
 import config
-from config.es_config import ES_HOSTS, ES_HTTP_AUTH, \
-    ES_COURSE_INDEX_PREFIX, ES_FCE_INDEX
+from config.es_config import ES_COURSE_INDEX_PREFIX, ES_FCE_INDEX
 
 
 ##
@@ -300,11 +299,28 @@ class CourseSearcher(Searcher):
 # @brief  Initializes connection to the Elasticsearch server
 #         The settings are in config/es_config.py
 def init_es_connection():
-    connections.create_connection(hosts=ES_HOSTS,
-                                  timeout=20,
-                                  use_ssl=True,
-                                  verify_certs=True,
-                                  http_auth=ES_HTTP_AUTH)
+    if config.es_config.SERVICE == 'AWS':
+        from elasticsearch import RequestsHttpConnection
+        from requests_aws4auth import AWS4Auth
+        from config.es_config import AWS_ES_HOSTS, AWS_ACCESS_KEY,\
+                                     AWS_SECRET_KEY, AWS_REGION
+        awsauth = AWS4Auth(AWS_ACCESS_KEY, AWS_SECRET_KEY, AWS_REGION, 'es')
+        connections.create_connection(
+            hosts=AWS_ES_HOSTS,
+            http_auth=awsauth,
+            use_ssl=True,
+            verify_certs=True,
+            connection_class=RequestsHttpConnection
+        )
+    else:
+        from config.es_config import ES_HOSTS, ES_HTTP_AUTH
+        connections.create_connection(
+            hosts=ES_HOSTS,
+            timeout=20,
+            use_ssl=True,
+            verify_certs=True,
+            http_auth=ES_HTTP_AUTH
+        )
 
 
 # @brief  Initializes an output dictionary for "courses" endpoint
