@@ -256,13 +256,13 @@ class CourseSearcher(Searcher):
         # Combine all the nested queries
         _lec_temp = Q()
         _sec_temp = Q()
-        for key, value in lec_nested_queries.items():
+        for value in lec_nested_queries.values():
             if _lec_temp is None:
                 _lec_temp = value
             else:
                 _lec_temp &= value
 
-        for key, value in sec_nested_queries.items():
+        for value in sec_nested_queries.values():
             if _sec_temp is None:
                 _sec_temp = value
             else:

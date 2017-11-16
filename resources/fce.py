@@ -1,7 +1,5 @@
-from flask import Flask, request
-from flask_restful import Resource, reqparse
-from flask_restful.utils import cors
-from common import Message, search, utils
+from flask_restful import Resource
+from common import search, utils
 
 
 ##

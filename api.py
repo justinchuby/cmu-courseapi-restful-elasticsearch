@@ -1,5 +1,5 @@
-from flask import Flask, request
-from flask_restful import Resource, Api, reqparse
+from flask import Flask
+from flask_restful import Api
 from flask_cors import CORS
 from werkzeug.routing import BaseConverter
 
@@ -8,7 +8,7 @@ import resources.course
 from config.course import BASE_URL as COURSE_BASE_URL
 import resources.fce
 from config.fce import BASE_URL as FCE_BASE_URL
-from common import Message, search, utils
+from common import search
 # Raygun
 # if settings.RAYGUN_APIKEY is not None:
 #     from raygun4py.middleware import flask

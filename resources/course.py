@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import request
 from flask_restful import Resource
 from common import Message, search, utils
 
