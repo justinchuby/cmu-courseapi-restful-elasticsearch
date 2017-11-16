@@ -337,7 +337,18 @@ def format_courses_output(response):
 
     if has_error(response):
         return output
+
+    # Add inner_hits in the courses response
     for hit in response:
+        course = hit.to_dict()
+        if 'inner_hits' in hit.meta:
+            inner_hits = hit.meta.inner_hits
+            course['inner_hits'] = {}
+            course['inner_hits']['lectures'] = [
+                h.to_dict() for h in inner_hits['lectures']]
+            course['inner_hits']['sections'] = [
+                h.to_dict() for h in inner_hits['sections']]
+
         output['courses'].append(hit.to_dict())
 
     return output
@@ -619,7 +630,6 @@ def list_all_courses(term):
     except:
         pass
     return []
-
 
 
 if __name__ == '__main__':
