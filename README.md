@@ -5,27 +5,15 @@ The courseapi for CMU built with Flask and Elasticsearch
 
 The online version of the course-api is built with Flask and Elasticsearch. This Flask server serves as a gateway between the client and the Elasticsearch server (and potentially other databases). It translates requests into Elasticsearch queries and returns scottylabs format course information to the client.
 
-~~To set up the Elasticsearch server, follow steps on https://medium.com/@happymacaron/how-to-set-up-elasticsearch-on-openshift-405d0460c818 and https://github.com/justinchuby/cmu-courseapi-elasticsearch~~
+To set up the Elasticsearch server, you may use the Elasticsearch service on AWS.
 
 ## Current Progress
 
-You may find the implemented endpoint in the `Api Endpoint` section.
+Currently I am working on compability with MongoDB.
 
 ### Try it out
 
 https://swaggerhub.com/apis/justinchuby/course-api/v1.
-
-## Requirements
-
-```
-Python>=3.5
-flask
-flask-restful
-elasticsearch>=5.0.0,<6.0.0  # Elasticsearch 5.x
-elasticsearch-dsl>=5.0.0,<6.0.0
-arrow
-certifi
-```
 
 ## Api Endpoint Implementation
 
@@ -53,7 +41,7 @@ course/v1/
 - [x]	/room/:room/term/:term
 		:room: 2315
 - [x]	/building/:building/room/:room
-- [ ]	/search
+- [x]	/search
 		?q
 
 - [x]	.../term/:term
