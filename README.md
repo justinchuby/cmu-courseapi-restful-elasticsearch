@@ -9,7 +9,7 @@ To set up the Elasticsearch server, you may use the Elasticsearch service on AWS
 
 ## Current Progress
 
-Currently I am working on compability with MongoDB.
+The project is working and I have moved onto building a new version of the api with GraphQL and MongoDB. It'll be released later this year (2019).
 
 ### Try it out
 
